@@ -62,11 +62,11 @@ expression new_const_expression(e_type tp1, v_type tp2)
   expr->is_const = 1;
   return expr;
 }
-expression new_var_expression(variable var, e_type tp)
+expression new_var_expression(variable var)
 {
   expression expr;
   expr = (expression)malloc(sizeof(struct exp));
-  expr->exp_type = tp;
+  expr->exp_type = VARIABLE;
   expr->var = var;
   expr->exp1 = NULL;
   expr->exp2 = NULL;
@@ -86,7 +86,8 @@ v_type get_binary_opr_type(OP op, expression exp1, expression exp2)
         case TYPE_INT: tp_exp1 = TYPE_INT; break;
         case TYPE_FLOAT: tp_exp1 = TYPE_FLOAT; break;
         case TYPE_DOUBLE: tp_exp1 = TYPE_DOUBLE; break;
-        default: yyerror("Unexpected type!"); return TYPE_ERROR;
+        case TYPE_ADDRESS: tp_exp1 = TYPE_ADDRESS; break;
+        default: yyerror("Illegal type!"); return TYPE_ERROR;
       }
       switch (exp2->return_type) {
         case TYPE_BOOL: tp_exp2 = TYPE_BOOL; break;
@@ -94,7 +95,8 @@ v_type get_binary_opr_type(OP op, expression exp1, expression exp2)
         case TYPE_INT: tp_exp2 = TYPE_INT; break;
         case TYPE_FLOAT: tp_exp2 = TYPE_FLOAT; break;
         case TYPE_DOUBLE: tp_exp2 = TYPE_DOUBLE; break;
-        default: yyerror("Unexpected type!"); return TYPE_ERROR;
+        case TYPE_ADDRESS: tp_exp1 = TYPE_ADDRESS; break;
+        default: yyerror("Illegal type!"); return TYPE_ERROR;
       }
       ret = tp_exp1 > tp_exp2 ? tp_exp1 : tp_exp2;
     }
@@ -104,13 +106,13 @@ v_type get_binary_opr_type(OP op, expression exp1, expression exp2)
         case TYPE_BOOL: tp_exp1 = TYPE_BOOL; break;
         case TYPE_CHAR: tp_exp1 = TYPE_CHAR; break;
         case TYPE_INT: tp_exp1 = TYPE_INT; break;
-        default: yyerror("Unexpected type!"); return TYPE_ERROR;
+        default: yyerror("Illegal type!"); return TYPE_ERROR;
       }
       switch (exp2->return_type) {
         case TYPE_BOOL: tp_exp2 = TYPE_BOOL; break;
         case TYPE_CHAR: tp_exp2 = TYPE_CHAR; break;
         case TYPE_INT: tp_exp2 = TYPE_INT; break;
-        default: yyerror("Unexpected type!"); return TYPE_ERROR;
+        default: yyerror("Illegal type!"); return TYPE_ERROR;
       }
       ret = tp_exp1 > tp_exp2 ? tp_exp1 : tp_exp2;
   }
@@ -118,7 +120,7 @@ v_type get_binary_opr_type(OP op, expression exp1, expression exp2)
     || op == EQ || op == NE || op == LOGICAL_OR
     || op == LOGICAL_AND) {
     if(exp1->return_type == TYPE_VOID || exp2->return_type == TYPE_VOID) {
-      yyerror("Unexpected void type!");
+      yyerror("Illegal type!");
       return TYPE_ERROR;
     }
     ret = TYPE_BOOL;
@@ -148,7 +150,7 @@ v_type get_unary_opr_type(OP op, expression exp)
   v_type ret, t = exp->return_type;
   if(op == LOGICAL_INV) {
     if(t == TYPE_VOID) {
-      yyerror("Unexpected void type!");
+      yyerror("Illegal type!");
       return TYPE_ERROR;
     }
     else {
@@ -193,10 +195,84 @@ expression new_self_expression(OP op, expression exp, e_type tp)
   expr->op = op;
   expr->exp_type = tp;
   if(exp->is_const) {
-    yyerror("Constant expression!");
-    expr->return_type = TYPE_ERROR;
+    yyerror("不可修改的值!");
   }
+  expr->return_type = exp->return_type;
   expr->exp1 = exp;
   exp->is_const = 1;
+  return expr;
+}
+
+expression new_assign_expression(OP op, expression exp1, expression exp2)
+{
+  expression expr;
+  v_type tp1 = exp1->return_type;
+  v_type tp2 = exp2->return_type;
+  expr = (expression)malloc(sizeof(struct exp));
+  expr->op = op;
+  expr->exp_type = ASSIGNMENT;
+  if(exp1->is_const) {
+    yyerror("Constant lvalue!");
+    expr->return_type = TYPE_ERROR;
+  }
+  else {
+    if(op == ASSIGN) {
+      if(tp2 == TYPE_VOID) {
+        yyerror("右值类型不能为空！");
+      }
+      else if(tp1 == TYPE_ADDRESS) {
+        if(tp2 == TYPE_DOUBLE || tp2 == TYPE_FLOAT) {
+          yyerror("右值类型必须为整型！");
+        }
+      }
+      else {
+
+      }
+    }
+    else if(op == ADD_ASSIGN || op == SUB_ASSIGN || op == MUL_ASSIGN
+      || op == DIV_ASSIGN || op == XOR_ASSIGN) {
+      if(tp2 == TYPE_VOID) {
+        yyerror("右值类型不能为空！");
+      }
+      else if(tp1 == TYPE_ADDRESS) {
+        if(op == ADD_ASSIGN || op == SUB_ASSIGN) {
+          if(tp2 == TYPE_DOUBLE || tp2 == TYPE_FLOAT || tp2 == TYPE_ADDRESS) {
+            yyerror("右值类型必须为整型！");
+          }
+        }
+        else {
+          yyerror("表达式必须包含算数类型");
+        }
+      }
+      else if(tp2 == TYPE_ADDRESS) {
+        yyerror("表达式必须包含算数类型");
+      }
+      else {
+
+      }
+    }
+    else if(op == MOD_ASSIGN || op == XOR_ASSIGN || op == MOD_ASSIGN
+      || op == RS_ASSIGN || op == LS_ASSIGN) {
+        if(tp2 == TYPE_VOID) {
+          yyerror("右值类型不能为空！");
+        }
+        else if(tp1 == TYPE_ADDRESS || tp1 == TYPE_FLOAT || tp1 == TYPE_DOUBLE) {
+          yyerror("左值必须为整型！");
+        }
+        else {
+          if(tp2 == TYPE_FLOAT || tp2 == TYPE_DOUBLE || tp2 == TYPE_ADDRESS) {
+            yyerror("右值必须为整型！");
+          }
+        }
+    }
+    else {
+      yyerror("Unknow error!");
+    }
+  }
+  expr->return_type = exp1->return_type;
+  expr->exp1 = exp1;
+  expr->exp2 = exp2;
+  expr->is_const = 1;
+
   return expr;
 }

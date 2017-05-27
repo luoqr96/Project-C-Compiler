@@ -177,13 +177,13 @@ INITIALIZATION_STATEMENT
 
 EXPRESSION
     : IDENTIFIER_EXPRESSION		{ $$ = $1; }
-    | CONSTANT_EXPRESSION		{ $$ = $1; }
-    /*| ASSIGNMENT_EXPRESSION		{ $$ = $1; }*/
-    | SELF_OPERATION		{ $$ = $1; }
-    | BINARY_OPERATION		{ $$ = $1; }
-    | UNARY_OPERATION		{ $$ = $1; }
-		| ARRAY_OPERATION		{ $$ = $1; }
-		| '(' EXPRESSION ')'		{ $$ = $2; }
+    | CONSTANT_EXPRESSION			{ $$ = $1; }
+    |ASSIGNMENT_EXPRESSION		{ $$ = $1; }
+    | SELF_OPERATION					{ $$ = $1; }
+    | BINARY_OPERATION				{ $$ = $1; }
+    | UNARY_OPERATION					{ $$ = $1; }
+		| ARRAY_OPERATION					{ $$ = $1; }
+		| '(' EXPRESSION ')'			{ $$ = $2; }
 		/*| CALL_FUNCTION		{ $$ = $1; }*/
     ;
 CALL_FUNCTION
@@ -195,14 +195,14 @@ ARRAY_OPERATION
 CONSTANT_EXPRESSION
     : CONSTANT_FLOAT				{ $$ = new_const_expression(CONST_FLOAT, TYPE_FLOAT); }
     | CONSTANT_INTEGER			{ $$ = new_const_expression(CONST_INT, TYPE_INT); }
-    | CONSTANT_STRING				{ $$ = new_const_expression(CONST_STR, TYPE_STRING); }
+    | CONSTANT_STRING				{ $$ = new_const_expression(CONST_STR, TYPE_ADDRESS); }
     | CONSTANT_CHARACTER		{ $$ = new_const_expression(CONST_CHAR, TYPE_CHAR); }
     ;
 IDENTIFIER_EXPRESSION
     : IDENTIFIER			{
 													entry en = lookup(temp_table, $1);
 													if(en) {
-														$$ = new_var_expression(en->var, VARIABLE);
+														$$ = new_var_expression(en->var);
 													}
 													else {
 														yyerror("Uninitialized variable!");
@@ -211,17 +211,17 @@ IDENTIFIER_EXPRESSION
 											}
     ;
 ASSIGNMENT_EXPRESSION
-    : EXPRESSION '=' EXPRESSION
-    | EXPRESSION ASSIGN_OR EXPRESSION
-    | EXPRESSION ASSIGN_AND EXPRESSION
-    | EXPRESSION ASSIGN_XOR EXPRESSION
-    | EXPRESSION ASSIGN_ADD EXPRESSION
-    | EXPRESSION ASSIGN_SUB EXPRESSION
-    | EXPRESSION ASSIGN_MUL EXPRESSION
-    | EXPRESSION ASSIGN_LS EXPRESSION
-    | EXPRESSION ASSIGN_RS EXPRESSION
-    | EXPRESSION ASSIGN_MOD EXPRESSION
-    | EXPRESSION ASSIGN_DIV EXPRESSION
+    : EXPRESSION '=' EXPRESSION										{ $$ = new_assign_expression(ASSIGN, $1, $3); }
+    | EXPRESSION ASSIGN_OR EXPRESSION							{ $$ = new_assign_expression(OR_ASSIGN, $1, $3); }
+    | EXPRESSION ASSIGN_AND EXPRESSION						{ $$ = new_assign_expression(AND_ASSIGN, $1, $3); }
+    | EXPRESSION ASSIGN_XOR EXPRESSION						{ $$ = new_assign_expression(XOR_ASSIGN, $1, $3); }
+    | EXPRESSION ASSIGN_ADD EXPRESSION						{ $$ = new_assign_expression(ADD_ASSIGN, $1, $3); }
+    | EXPRESSION ASSIGN_SUB EXPRESSION						{ $$ = new_assign_expression(SUB_ASSIGN, $1, $3); }
+    | EXPRESSION ASSIGN_MUL EXPRESSION						{ $$ = new_assign_expression(MUL_ASSIGN, $1, $3); }
+    | EXPRESSION ASSIGN_LS EXPRESSION							{ $$ = new_assign_expression(LS_ASSIGN, $1, $3); }
+    | EXPRESSION ASSIGN_RS EXPRESSION							{ $$ = new_assign_expression(RS_ASSIGN, $1, $3); }
+    | EXPRESSION ASSIGN_MOD EXPRESSION						{ $$ = new_assign_expression(MOD_ASSIGN, $1, $3); }
+    | EXPRESSION ASSIGN_DIV EXPRESSION						{ $$ = new_assign_expression(DIV_ASSIGN, $1, $3); }
     ;
 
 UNARY_OPERATION
