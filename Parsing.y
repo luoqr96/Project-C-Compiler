@@ -8,6 +8,7 @@ extern int row;
 var_table global_table;
 var_table temp_table;
 var_table parent_table;
+statement temp_stmt = NULL;
 %}
 %union {
 	int const_int;
@@ -21,7 +22,9 @@ var_table parent_table;
 	variable var;
 	parameter p;
 	OP op;
+	statement stmt;
 }
+%type <stmt> INITIALIZATION_STATEMENT
 %type <t> SIMPLE_TYPE POINTER_TYPE TYPE
 %type <var> DECLARATION_ARRAY DECLARATION
 %type <p> PARAMETER
@@ -75,13 +78,23 @@ FUNCTION
     ;
 
 DECLARATION
-    : TYPE IDENTIFIER				{ $$ = new_variable($2, $1.tp, NULL, 0); }
+    : TYPE IDENTIFIER				{
+															entry en = lookup_in_cur_environment(temp_table, $2);
+															if(!en) {
+																$$ = new_variable($2, $1.tp, NULL, 0);
+																insert(temp_table, $$);
+															}
+															else {
+																yyerror("变量重定义！");
+																$$ = NULL;
+															}
+														}
 		| DECLARATION_ARRAY			{ $$ = $1; }
     ;
 DECLARATION_ARRAY
-		: TYPE IDENTIFIER '[' ']'						{ $$ = new_variable($2, $1.tp, new_dimension(0), $1.order); }
+		: TYPE IDENTIFIER '[' ']'															{ $$ = new_variable($2, $1.tp, new_dimension(0), $1.order); }
 		| TYPE IDENTIFIER '[' CONSTANT_INTEGER ']'						{ $$ = new_variable($2, $1.tp, new_dimension($4), $1.order); }
-		| DECLARATION_ARRAY '[' ']'					{ update_dimension($1->dim, 0); $$ = $1; }
+		| DECLARATION_ARRAY '[' ']'														{ update_dimension($1->dim, 0); $$ = $1; }
 		| DECLARATION_ARRAY '[' CONSTANT_INTEGER ']'					{ update_dimension($1->dim, $3); $$ = $1; }
 		;
 TYPE
@@ -113,7 +126,11 @@ COMPOUND_STATEMENT
 		| LPAREN STATEMENT_LIST RPAREN
 		;
 LPAREN
-		: '{'			{ parent_table = temp_table; temp_table = gen_table(); add_child_table(parent_table, temp_table); }
+		: '{'			{
+								parent_table = temp_table; temp_table = gen_table();
+			 					add_child_table(parent_table, temp_table);
+								temp_stmt = NULL;
+							}
 		;
 RPAREN
 		: '}'			{ temp_table = temp_table->parent; }
@@ -170,8 +187,24 @@ STATEMENT
     ;
 
 INITIALIZATION_STATEMENT
-		: DECLARATION ';'
-		| DECLARATION '=' EXPRESSION ';'
+		: DECLARATION ';'										{
+																					if(!$1) {
+																						$$ = NULL;
+																					}
+																					else {
+																						var_init vi = new_var_init($1, NULL);
+																						$$ = new_stmt_init(vi);
+																					}
+																				}
+		| DECLARATION '=' EXPRESSION ';'		{
+																					if(!$1) {
+																						$$ = NULL;
+																					}
+																					else {
+																						var_init vi = new_var_init($1, $3);
+																						$$ = new_stmt_init(vi);
+																					}
+																				}
 		;
 
 

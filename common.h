@@ -45,6 +45,7 @@ struct dim {
 };
 struct var {
   v_type var_type;
+  v_type return_type;
   char * name;
   dimension dim;     //for array
   unsigned int order;         //for pointer

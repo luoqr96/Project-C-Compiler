@@ -6,6 +6,12 @@ variable new_variable(char * name, v_type t, dimension d, unsigned int o)
   variable var = (variable)malloc(sizeof(struct var));
   var->name = name;
   var->var_type = t;
+  if(t == TYPE_ARRAY || t == TYPE_POINTER) {
+    var->return_type = TYPE_ADDRESS;
+  }
+  else {
+    var->return_type = t;
+  }
   var->dim = d;
   var->order = 0;
   return var;
@@ -275,4 +281,35 @@ expression new_assign_expression(OP op, expression exp1, expression exp2)
   expr->is_const = 1;
 
   return expr;
+}
+var_init new_var_init(variable var, expression exp)
+{
+  var_init vi = (var_init)malloc(sizeof(struct v_init));
+  vi->var = var;
+  vi->exp = exp;
+  if(exp) {
+    if(exp->return_type == TYPE_VOID) {
+      yyerror("右值类型不能为空！");
+      return NULL;
+    }
+    else if(var->return_type == TYPE_ADDRESS) {
+      if(exp->return_type == TYPE_DOUBLE || exp->return_type == TYPE_FLOAT) {
+        yyerror("右值类型必须为整型！");
+        return NULL;
+      }
+    }
+    else {
+
+    }
+  }
+  return vi;
+}
+statement new_stmt_init(var_init vi)
+{
+  statement s = (statement)malloc(sizeof(struct stmt));
+  s->isInit = 1;
+  s->init = vi;
+  s->exp = NULL;
+  s->next = NULL;
+  return s;
 }

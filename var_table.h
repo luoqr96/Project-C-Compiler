@@ -56,6 +56,20 @@ entry lookup(var_table vt, char * id)
   }
   return NULL;
 }
+entry lookup_in_cur_environment(var_table vt, char * id)
+{
+  table tb;
+  int index = hash(id) % SIZE;
+  entry en;
+  tb = vt->tb;
+  for(en = tb[index]; en; en = en->next) {
+    if(!strcmp(id, en->var->name)) {
+      return en;
+    }
+  }
+  return NULL;
+}
+
 void add_child_table(var_table vt, var_table c)
 {
   var_table ptr = vt->child;
