@@ -20,7 +20,7 @@ var_table gen_table()
 int hash(char * id)
 {
   char *p;
-  int h;
+  int h = 0;
   for(p = id; *p; p++) {
     h += (int)*p * (int)*p;
   }

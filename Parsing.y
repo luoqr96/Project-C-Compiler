@@ -16,7 +16,7 @@ statement temp_stmt = NULL;
 	char const_char;
   char *const_str;
 	char *id;
-	union { v_type tp; int order; } t;
+	struct { v_type tp; int order; } t;
 	expression exp;
 	v_type tp;
 	variable var;
@@ -302,17 +302,4 @@ void yyerror(char *s)
 {
   fprintf(stderr, "line%d column%d %s\n", row, col, s);
   //printf("Error: %s\n", emseg);
-}
-
-
-int main(int argc, char *argv[])
-{
-	global_table = gen_table();
-	temp_table = global_table;
-	parent_table = NULL;
-  /*yyin = fopen(argv[1], "r");*/
-	yyin = fopen("test.c", "r");
-  yyparse();
-  fclose(yyin);
-  return 0;
 }

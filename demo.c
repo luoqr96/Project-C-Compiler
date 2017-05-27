@@ -2306,4 +2306,15 @@ int main()
   return 0;
 }
 */
+int main(int argc, char *argv[])
+{
+	global_table = gen_table();
+	temp_table = global_table;
+	parent_table = NULL;
+  /*yyin = fopen(argv[1], "r");*/
+	yyin = fopen("test.c", "r");
+  yyparse();
+  fclose(yyin);
+  return 0;
+}
 

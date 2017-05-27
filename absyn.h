@@ -6,6 +6,8 @@ variable new_variable(char * name, v_type t, dimension d, unsigned int o)
   variable var = (variable)malloc(sizeof(struct var));
   var->name = name;
   var->var_type = t;
+  //printf("%d\n", t);
+  //printf("%d\n", TYPE_DOUBLE);
   if(t == TYPE_ARRAY || t == TYPE_POINTER) {
     var->return_type = TYPE_ADDRESS;
   }
@@ -74,6 +76,7 @@ expression new_var_expression(variable var)
   expr = (expression)malloc(sizeof(struct exp));
   expr->exp_type = VARIABLE;
   expr->var = var;
+  expr->return_type = var->return_type;
   expr->exp1 = NULL;
   expr->exp2 = NULL;
   expr->dim = var->dim;
@@ -101,7 +104,7 @@ v_type get_binary_opr_type(OP op, expression exp1, expression exp2)
         case TYPE_INT: tp_exp2 = TYPE_INT; break;
         case TYPE_FLOAT: tp_exp2 = TYPE_FLOAT; break;
         case TYPE_DOUBLE: tp_exp2 = TYPE_DOUBLE; break;
-        case TYPE_ADDRESS: tp_exp1 = TYPE_ADDRESS; break;
+        case TYPE_ADDRESS: tp_exp2 = TYPE_ADDRESS; break;
         default: yyerror("Illegal type!"); return TYPE_ERROR;
       }
       ret = tp_exp1 > tp_exp2 ? tp_exp1 : tp_exp2;
@@ -153,7 +156,7 @@ expression new_binary_expression(OP op, expression exp1, expression exp2)
 }
 v_type get_unary_opr_type(OP op, expression exp)
 {
-  v_type ret, t = exp->return_type;
+  v_type ret = TYPE_ERROR, t = exp->return_type;
   if(op == LOGICAL_INV) {
     if(t == TYPE_VOID) {
       yyerror("Illegal type!");
@@ -305,6 +308,7 @@ var_init new_var_init(variable var, expression exp)
       }
     }
     else if(var->return_type == TYPE_FLOAT || var->return_type == TYPE_DOUBLE) {
+      //printf("FLOAT\n");
       if(exp->return_type == TYPE_ADDRESS) {
         yyerror("右值类型必须为整型！");
       }

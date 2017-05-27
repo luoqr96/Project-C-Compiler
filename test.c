@@ -1,9 +1,8 @@
 int main()
 {
-	double acd = 5;
+	double acd = 2;
 
-
-	acd = 4;
+	acd = 22;
 
 
 	acd = 5.0;
