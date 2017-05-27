@@ -1,5 +1,6 @@
 #include "common.h"
 #include "var_table.h"
+extern void yyerror(char *s);
 variable new_variable(char * name, v_type t, dimension d, unsigned int o)
 {
   variable var = (variable)malloc(sizeof(struct var));
@@ -58,6 +59,7 @@ expression new_const_expression(e_type tp1, v_type tp2)
   expr->exp2 = NULL;
   expr->dim = NULL;
   expr->get_address_able = 0;
+  expr->is_const = 1;
   return expr;
 }
 expression new_var_expression(variable var, e_type tp)
@@ -70,6 +72,7 @@ expression new_var_expression(variable var, e_type tp)
   expr->exp2 = NULL;
   expr->dim = var->dim;
   expr->get_address_able = 1;
+  expr->is_const = 0;
   return expr;
 }
 v_type get_binary_opr_type(OP op, expression exp1, expression exp2)
@@ -83,7 +86,7 @@ v_type get_binary_opr_type(OP op, expression exp1, expression exp2)
         case TYPE_INT: tp_exp1 = TYPE_INT; break;
         case TYPE_FLOAT: tp_exp1 = TYPE_FLOAT; break;
         case TYPE_DOUBLE: tp_exp1 = TYPE_DOUBLE; break;
-        default: return TYPE_ERROR;
+        default: yyerror("Unexpected type!"); return TYPE_ERROR;
       }
       switch (exp2->return_type) {
         case TYPE_BOOL: tp_exp2 = TYPE_BOOL; break;
@@ -91,7 +94,7 @@ v_type get_binary_opr_type(OP op, expression exp1, expression exp2)
         case TYPE_INT: tp_exp2 = TYPE_INT; break;
         case TYPE_FLOAT: tp_exp2 = TYPE_FLOAT; break;
         case TYPE_DOUBLE: tp_exp2 = TYPE_DOUBLE; break;
-        default: return TYPE_ERROR;
+        default: yyerror("Unexpected type!"); return TYPE_ERROR;
       }
       ret = tp_exp1 > tp_exp2 ? tp_exp1 : tp_exp2;
     }
@@ -101,13 +104,13 @@ v_type get_binary_opr_type(OP op, expression exp1, expression exp2)
         case TYPE_BOOL: tp_exp1 = TYPE_BOOL; break;
         case TYPE_CHAR: tp_exp1 = TYPE_CHAR; break;
         case TYPE_INT: tp_exp1 = TYPE_INT; break;
-        default: return TYPE_ERROR;
+        default: yyerror("Unexpected type!"); return TYPE_ERROR;
       }
       switch (exp2->return_type) {
         case TYPE_BOOL: tp_exp2 = TYPE_BOOL; break;
         case TYPE_CHAR: tp_exp2 = TYPE_CHAR; break;
         case TYPE_INT: tp_exp2 = TYPE_INT; break;
-        default: return TYPE_ERROR;
+        default: yyerror("Unexpected type!"); return TYPE_ERROR;
       }
       ret = tp_exp1 > tp_exp2 ? tp_exp1 : tp_exp2;
   }
@@ -115,6 +118,7 @@ v_type get_binary_opr_type(OP op, expression exp1, expression exp2)
     || op == EQ || op == NE || op == LOGICAL_OR
     || op == LOGICAL_AND) {
     if(exp1->return_type == TYPE_VOID || exp2->return_type == TYPE_VOID) {
+      yyerror("Unexpected void type!");
       return TYPE_ERROR;
     }
     ret = TYPE_BOOL;
@@ -136,6 +140,7 @@ expression new_binary_expression(OP op, expression exp1, expression exp2)
   expr->exp1 = exp1;
   expr->exp2 = exp2;
   expr->return_type = get_binary_opr_type(op, exp1, exp2);
+  expr->is_const = 1;
   return expr;
 }
 v_type get_unary_opr_type(OP op, expression exp)
@@ -143,6 +148,7 @@ v_type get_unary_opr_type(OP op, expression exp)
   v_type ret, t = exp->return_type;
   if(op == LOGICAL_INV) {
     if(t == TYPE_VOID) {
+      yyerror("Unexpected void type!");
       return TYPE_ERROR;
     }
     else {
@@ -150,9 +156,21 @@ v_type get_unary_opr_type(OP op, expression exp)
     }
   }
   else if(op == GET_ADDR) {
-    if(t == TYPE_POINTER) {
-
+    //????
+  }
+  else if(op == GET_VAL) {
+    //????
+  }
+  else if(op == SIGN_PLUS || op == SIGN_MINUS) {
+    if(t == TYPE_CHAR || t == TYPE_BOOL || t == TYPE_INT || t == TYPE_FLOAT || t == TYPE_DOUBLE) {
+      ret = t;
     }
+    else {
+      ret = TYPE_ERROR;
+    }
+  }
+  else {
+    ret = TYPE_ERROR;
   }
   return ret;
 }
@@ -163,6 +181,22 @@ expression new_unary_expression(OP op, expression exp)
   expr->op = op;
   expr->exp_type = UNARY;
   expr->exp1 = exp;
+  expr->exp2 = NULL;
   expr->return_type = get_unary_opr_type(op, exp);
+  exp->is_const = (op == SIGN_PLUS || op == SIGN_MINUS);
+  return expr;
+}
+expression new_self_expression(OP op, expression exp, e_type tp)
+{
+  expression expr;
+  expr = (expression)malloc(sizeof(struct exp));
+  expr->op = op;
+  expr->exp_type = tp;
+  if(exp->is_const) {
+    yyerror("Constant expression!");
+    expr->return_type = TYPE_ERROR;
+  }
+  expr->exp1 = exp;
+  exp->is_const = 1;
   return expr;
 }

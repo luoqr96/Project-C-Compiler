@@ -12,8 +12,8 @@ typedef enum {
   ADD_ASSIGN, SUB_ASSIGN, XOR_ASSIGN, DIV_ASSIGN, MOD_ASSIGN, LS_ASSIGN, RS_ASSIGN
 } OP;
 typedef enum {
-  VARIABLE, CONST_CHAR, CONST_STR, CONST_INT, CONST_FLOAT, UNARY, BINARY, SELF_LEFT,
-  SELF_RIGHT, ASSIGNMENT, ARRAY, FUNC
+  VARIABLE, CONST_CHAR, CONST_STR, CONST_INT, CONST_FLOAT, UNARY, BINARY, INCRE_LEFT,
+  DECRE_RIGHT, INCRE_RIGHT, DECRE_LEFT, ASSIGNMENT, ARRAY, FUNC
 } e_type;
 
 
@@ -58,6 +58,7 @@ struct param {
   v_type return_type;
   variable var;
   _Bool get_address_able;
+  _Bool is_const;
   dimension dim;
   char const_char;
   char * const_str;

@@ -176,15 +176,15 @@ INITIALIZATION_STATEMENT
 
 
 EXPRESSION
-    : IDENTIFIER_EXPRESSION
-    | CONSTANT_EXPRESSION
-    | ASSIGNMENT_EXPRESSION
-    | SELF_OPERATION
-    | BINARY_OPERATION
-    | UNARY_OPERATION
-		| ARRAY_OPERATION
-		| '(' EXPRESSION ')'
-		| CALL_FUNCTION
+    : IDENTIFIER_EXPRESSION		{ $$ = $1; }
+    | CONSTANT_EXPRESSION		{ $$ = $1; }
+    /*| ASSIGNMENT_EXPRESSION		{ $$ = $1; }*/
+    | SELF_OPERATION		{ $$ = $1; }
+    | BINARY_OPERATION		{ $$ = $1; }
+    | UNARY_OPERATION		{ $$ = $1; }
+		| ARRAY_OPERATION		{ $$ = $1; }
+		| '(' EXPRESSION ')'		{ $$ = $2; }
+		/*| CALL_FUNCTION		{ $$ = $1; }*/
     ;
 CALL_FUNCTION
 		: IDENTIFIER '(' EXPRESSION ')'
@@ -200,6 +200,13 @@ CONSTANT_EXPRESSION
     ;
 IDENTIFIER_EXPRESSION
     : IDENTIFIER			{
+													entry en = lookup(temp_table, $1);
+													if(en) {
+														$$ = new_var_expression(en->var, VARIABLE);
+													}
+													else {
+														yyerror("Uninitialized variable!");
+													}
 			/*check table first*/ /* $$ = new_simple_expression(VARIABLE, TYPE_ERROR); */
 											}
     ;
@@ -218,39 +225,39 @@ ASSIGNMENT_EXPRESSION
     ;
 
 UNARY_OPERATION
-    : '~' EXPRESSION    %prec BIT_NEG
-    | '!' EXPRESSION    %prec INV
-    | '&' EXPRESSION    %prec GET_ADDRESS
-    | '*' EXPRESSION    %prec GET_VALUE
-    | '-' EXPRESSION    %prec POS
-    | '+' EXPRESSION    %prec NEG
+    : '~' EXPRESSION    %prec BIT_NEG					{ $$ = new_unary_expression(BITWISE_NEG, $2); }
+    | '!' EXPRESSION    %prec INV							{ $$ = new_unary_expression(LOGICAL_INV, $2); }
+    | '&' EXPRESSION    %prec GET_ADDRESS			{ $$ = new_unary_expression(GET_ADDR, $2); }
+    | '*' EXPRESSION    %prec GET_VALUE				{ $$ = new_unary_expression(GET_VAL, $2); }
+    | '-' EXPRESSION    %prec NEG							{ $$ = new_unary_expression(SIGN_MINUS, $2); }
+    | '+' EXPRESSION    %prec POS							{ $$ = new_unary_expression(SIGN_PLUS, $2); }
     ;
 SELF_OPERATION
-    : OP_INCRE EXPRESSION    %prec PREFIX_INCRE
-    | OP_DECRE EXPRESSION    %prec PREFIX_DECRE
-    | EXPRESSION OP_INCRE
-    | EXPRESSION OP_DECRE
+    : OP_INCRE EXPRESSION    %prec PREFIX_INCRE			{ $$ = new_self_expression(INCRE, $2, INCRE_LEFT); }
+    | OP_DECRE EXPRESSION    %prec PREFIX_DECRE			{ $$ = new_self_expression(DECRE, $2, DECRE_LEFT); }
+    | EXPRESSION OP_INCRE			{ $$ = new_self_expression(INCRE, $1, INCRE_RIGHT); }
+    | EXPRESSION OP_DECRE			{ $$ = new_self_expression(DECRE, $1, DECRE_RIGHT); }
     ;
 BINARY_OPERATION
-    : EXPRESSION '+' EXPRESSION		{ new_binary_expression(ADD, $1, $3); }
-    | EXPRESSION '-' EXPRESSION		{ new_binary_expression(SUB, $1, $3); }
-    | EXPRESSION '*' EXPRESSION		{ new_binary_expression(MUL, $1, $3); }
-    | EXPRESSION '/' EXPRESSION		{ new_binary_expression(DIV, $1, $3); }
-    | EXPRESSION '%' EXPRESSION		{ new_binary_expression(MOD, $1, $3); }
-    | EXPRESSION '^' EXPRESSION		{ new_binary_expression(XOR, $1, $3); }
-    | EXPRESSION '&' EXPRESSION		{ new_binary_expression(AND, $1, $3); }
-    | EXPRESSION '|' EXPRESSION		{ new_binary_expression(OR, $1, $3); }
-		| EXPRESSION ',' EXPRESSION		{ new_binary_expression(COMMA, $1, $3); }
-		| EXPRESSION '<' EXPRESSION		{ new_binary_expression(L, $1, $3); }
-		| EXPRESSION '>' EXPRESSION		{ new_binary_expression(G, $1, $3); }
-    | EXPRESSION OP_LS EXPRESSION		{ new_binary_expression(LS, $1, $3); }
-    | EXPRESSION OP_RS EXPRESSION		{ new_binary_expression(RS, $1, $3); }
-		| EXPRESSION OP_AND EXPRESSION		{ new_binary_expression(LOGICAL_AND, $1, $3); }
-		| EXPRESSION OP_OR EXPRESSION		{ new_binary_expression(LOGICAL_OR, $1, $3); }
-		| EXPRESSION OP_EQ EXPRESSION		{ new_binary_expression(EQ, $1, $3); }
-		| EXPRESSION OP_GE EXPRESSION		{ new_binary_expression(GE, $1, $3); }
-		| EXPRESSION OP_LE EXPRESSION		{ new_binary_expression(LE, $1, $3); }
-		| EXPRESSION OP_NE EXPRESSION		{ new_binary_expression(NE, $1, $3); }
+    : EXPRESSION '+' EXPRESSION		{ $$ = new_binary_expression(ADD, $1, $3); }
+    | EXPRESSION '-' EXPRESSION		{ $$ = new_binary_expression(SUB, $1, $3); }
+    | EXPRESSION '*' EXPRESSION		{ $$ = new_binary_expression(MUL, $1, $3); }
+    | EXPRESSION '/' EXPRESSION		{ $$ = new_binary_expression(DIV, $1, $3); }
+    | EXPRESSION '%' EXPRESSION		{ $$ = new_binary_expression(MOD, $1, $3); }
+    | EXPRESSION '^' EXPRESSION		{ $$ = new_binary_expression(XOR, $1, $3); }
+    | EXPRESSION '&' EXPRESSION		{ $$ = new_binary_expression(AND, $1, $3); }
+    | EXPRESSION '|' EXPRESSION		{ $$ = new_binary_expression(OR, $1, $3); }
+		| EXPRESSION ',' EXPRESSION		{ $$ = new_binary_expression(COMMA, $1, $3); }
+		| EXPRESSION '<' EXPRESSION		{ $$ = new_binary_expression(L, $1, $3); }
+		| EXPRESSION '>' EXPRESSION		{ $$ = new_binary_expression(G, $1, $3); }
+    | EXPRESSION OP_LS EXPRESSION		{ $$ = new_binary_expression(LS, $1, $3); }
+    | EXPRESSION OP_RS EXPRESSION		{ $$ = new_binary_expression(RS, $1, $3); }
+		| EXPRESSION OP_AND EXPRESSION		{ $$ = new_binary_expression(LOGICAL_AND, $1, $3); }
+		| EXPRESSION OP_OR EXPRESSION		{ $$ = new_binary_expression(LOGICAL_OR, $1, $3); }
+		| EXPRESSION OP_EQ EXPRESSION		{ $$ = new_binary_expression(EQ, $1, $3); }
+		| EXPRESSION OP_GE EXPRESSION		{ $$ = new_binary_expression(GE, $1, $3); }
+		| EXPRESSION OP_LE EXPRESSION		{ $$ = new_binary_expression(LE, $1, $3); }
+		| EXPRESSION OP_NE EXPRESSION		{ $$ = new_binary_expression(NE, $1, $3); }
     ;
 
 %%

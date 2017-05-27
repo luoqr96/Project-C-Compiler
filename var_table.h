@@ -39,7 +39,7 @@ void insert(var_table vt, variable var)
   int index = hash(var->name) % SIZE;
   tb[index] = new_entry(var, tb[index]);
 }
-entry lookup(var_table vt, char * id, v_type tp)
+entry lookup(var_table vt, char * id)
 {
   table tb;
   var_table p = vt;
@@ -49,12 +49,7 @@ entry lookup(var_table vt, char * id, v_type tp)
     tb = p->tb;
     for(en = tb[index]; en; en = en->next) {
       if(!strcmp(id, en->var->name)) {
-        if(en->var->var_type == tp) {
-          return en;
-        }
-        else {
-          return NULL;
-        }
+        return en;
       }
     }
     p = p->parent;
