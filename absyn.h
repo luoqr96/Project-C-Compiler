@@ -292,7 +292,7 @@ var_init new_var_init(variable var, expression exp)
   var_init vi = (var_init)malloc(sizeof(struct v_init));
   vi->var = var;
   vi->exp = exp;
-  printf("Check\n");
+  //printf("Check\n");
   if(exp) {
     if(exp->return_type == TYPE_VOID) {
       yyerror("右值类型不能为空！");

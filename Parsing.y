@@ -235,7 +235,10 @@ CONSTANT_EXPRESSION
 IDENTIFIER_EXPRESSION
     : IDENTIFIER			{
 													entry en = lookup(temp_table, $1);
+													//printf("VAR:%s\n", $1);
+													//printf("TABLE:0x%0X\n", &temp_table);
 													if(en) {
+														//printf("%s!!!\n", $1);
 														$$ = new_var_expression(en->var);
 													}
 													else {
@@ -307,7 +310,8 @@ int main(int argc, char *argv[])
 	global_table = gen_table();
 	temp_table = global_table;
 	parent_table = NULL;
-  yyin = fopen(argv[1], "r");
+  /*yyin = fopen(argv[1], "r");*/
+	yyin = fopen("test.c", "r");
   yyparse();
   fclose(yyin);
   return 0;

@@ -1,6 +1,6 @@
 #include "common.h"
 #include <string.h>
-#define SIZE 109
+const unsigned int SIZE = 109;
 
 var_table gen_table()
 {
@@ -17,12 +17,12 @@ var_table gen_table()
   vt->sibling = NULL;
   return vt;
 }
-unsigned int hash(char * id)
+int hash(char * id)
 {
   char *p;
-  unsigned int h;
+  int h;
   for(p = id; *p; p++) {
-    h += h * 65599 + *p;
+    h += (int)*p * (int)*p;
   }
   return h;
 }
@@ -42,8 +42,13 @@ void insert(var_table vt, variable var)
 entry lookup(var_table vt, char * id)
 {
   table tb;
-  int index = hash(id) % SIZE;
+  int h = hash(id);
+  int index = h % SIZE;
   entry en;
+  // printf("global:%s\n", id);
+  // printf("global:%d\n", h);
+  // printf("global:%d\n", index);
+  // printf("global:%d\n", SIZE);
   while(vt) {
     tb = vt->tb;
     for(en = tb[index]; en; en = en->next) {
@@ -58,14 +63,22 @@ entry lookup(var_table vt, char * id)
 entry lookup_in_cur_environment(var_table vt, char * id)
 {
   table tb;
-  int index = hash(id) % SIZE;
+  int h = hash(id);
+  int index = h % SIZE;
+  // printf("local:%s\n", id);
+  // printf("local:%d\n", h);
+  // printf("local:%d\n", index);
+  // printf("local:%d\n", SIZE);
   entry en;
   tb = vt->tb;
   for(en = tb[index]; en; en = en->next) {
+    //printf("CHECKVAR:%s\n", en->var->name);
     if(!strcmp(id, en->var->name)) {
+      //printf("succeed\n");
       return en;
     }
   }
+  //printf("not find\n");
   return NULL;
 }
 

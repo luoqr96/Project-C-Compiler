@@ -1,8 +1,13 @@
 int main()
 {
-	double ac = "fdaf";
-	double q;
-	ac = 4;
-	
-	ac = 3;
+	double acd = 5;
+
+
+	acd = 4;
+
+
+	acd = 5.0;
+
+
+	acd = 3;
 }
