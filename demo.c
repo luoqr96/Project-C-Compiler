@@ -1125,50 +1125,66 @@ YY_RULE_SETUP
 case 63:
 YY_RULE_SETUP
 #line 91 "Lexing.l"
-{ /* printf("identifier\n"); */ count(); yylval.id = yytext; return IDENTIFIER; }
+{
+                                          int len = strlen(yytext);
+                                          count();
+                                          //yylval.id = yytext;
+                                          //printf("%s\n", yylval.id);
+                                          yylval.id = (char *)malloc(sizeof(char) * (len + 1));
+                                          memcpy(yylval.id, yytext, len + 1);
+                                          return IDENTIFIER;
+                                        }
 	YY_BREAK
 case 64:
 YY_RULE_SETUP
-#line 92 "Lexing.l"
+#line 100 "Lexing.l"
 { /* printf("interger\n"); */ count(); yylval.const_int = atoi((char *)yytext); return CONSTANT_INTEGER; }
 	YY_BREAK
 case 65:
 YY_RULE_SETUP
-#line 93 "Lexing.l"
+#line 101 "Lexing.l"
 { /* printf("float\n"); */ count(); yylval.const_float = atof((char *)yytext); return CONSTANT_FLOAT; }
 	YY_BREAK
 case 66:
 YY_RULE_SETUP
-#line 94 "Lexing.l"
+#line 102 "Lexing.l"
 { /* printf("float\n"); */ count(); yylval.const_float = atof((char *)yytext); return CONSTANT_FLOAT; }
 	YY_BREAK
 case 67:
 YY_RULE_SETUP
-#line 95 "Lexing.l"
-{ check_string(); count(); yylval.const_str = yytext;/* printf("string\n"); */ return CONSTANT_STRING; }
+#line 103 "Lexing.l"
+{
+                          check_string();
+                          count();
+                          int len = strlen(yytext);
+                          yylval.id = (char *)malloc(sizeof(char) * (len + 1));
+                          memcpy(yylval.id, yytext, len + 1);
+                          yylval.const_str = yytext;/* printf("string\n"); */
+                          return CONSTANT_STRING;
+                        }
 	YY_BREAK
 case 68:
 YY_RULE_SETUP
-#line 96 "Lexing.l"
+#line 112 "Lexing.l"
 { check_character(); count(); yylval.const_char = *yytext;/* printf("character\n"); */ return CONSTANT_CHARACTER; }
 	YY_BREAK
 case 69:
 YY_RULE_SETUP
-#line 97 "Lexing.l"
+#line 113 "Lexing.l"
 { /* printf("whitespace\n"); */ count(); }
 	YY_BREAK
 case 70:
 /* rule 70 can match eol */
 YY_RULE_SETUP
-#line 98 "Lexing.l"
+#line 114 "Lexing.l"
 { /* printf("space\n"); */ /* return *yytext; */ count(); }
 	YY_BREAK
 case 71:
 YY_RULE_SETUP
-#line 99 "Lexing.l"
+#line 115 "Lexing.l"
 ECHO;
 	YY_BREAK
-#line 1172 "demo.c"
+#line 1188 "demo.c"
 case YY_STATE_EOF(INITIAL):
 	yyterminate();
 
@@ -2165,13 +2181,17 @@ void yyfree (void * ptr )
 
 #define YYTABLES_NAME "yytables"
 
-#line 99 "Lexing.l"
+#line 115 "Lexing.l"
 
 
 void check_string()
 {
   char cur = 0, pre = 0;
+  int i = 1;
   while((cur = input())) {
+    *(yytext + i) = cur;
+    i++;
+
     if(pre == '\\') {
       switch(cur) {
         case('a'):  break;
@@ -2192,10 +2212,12 @@ void check_string()
     }
     else {
       if(cur == '\"') {
+        yytext[i] = 0;
         return;
       }
       if(cur == '\n') {
         yyerror("Unmatched double quotes!");
+        yytext[i] = 0;
         return;
       }
       pre = cur;

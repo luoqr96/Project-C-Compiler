@@ -88,11 +88,27 @@ SPACE [\n|(\r\n)]
 "/*"                    { /* printf("comment\n"); */ check_comment(); count(); /* return COMMENT; */ }
 "//"[^\n]*              { /* printf("comment\n"); */ /* return COMMENT; */ }
 
-(({LETTER}|"_")({DIGIT}|{LETTER})*)     { /* printf("identifier\n"); */ count(); yylval.id = yytext; return IDENTIFIER; }
+(({LETTER}|"_")({DIGIT}|{LETTER})*)     {
+                                          int len = strlen(yytext);
+                                          count();
+                                          //yylval.id = yytext;
+                                          //printf("%s\n", yylval.id);
+                                          yylval.id = (char *)malloc(sizeof(char) * (len + 1));
+                                          memcpy(yylval.id, yytext, len + 1);
+                                          return IDENTIFIER;
+                                        }
 {DIGIT}+                { /* printf("interger\n"); */ count(); yylval.const_int = atoi((char *)yytext); return CONSTANT_INTEGER; }
 {DIGIT}*\.{DIGIT}+      { /* printf("float\n"); */ count(); yylval.const_float = atof((char *)yytext); return CONSTANT_FLOAT; }
 {DIGIT}+\.{DIGIT}*      { /* printf("float\n"); */ count(); yylval.const_float = atof((char *)yytext); return CONSTANT_FLOAT; }
-\"                      { check_string(); count(); yylval.const_str = yytext;/* printf("string\n"); */ return CONSTANT_STRING; }
+\"                      {
+                          check_string();
+                          count();
+                          int len = strlen(yytext);
+                          yylval.id = (char *)malloc(sizeof(char) * (len + 1));
+                          memcpy(yylval.id, yytext, len + 1);
+                          yylval.const_str = yytext;/* printf("string\n"); */
+                          return CONSTANT_STRING;
+                        }
 \'                      { check_character(); count(); yylval.const_char = *yytext;/* printf("character\n"); */ return CONSTANT_CHARACTER; }
 {WHITESPACE}            { /* printf("whitespace\n"); */ count(); }
 {SPACE}                 { /* printf("space\n"); */ /* return *yytext; */ count(); }
@@ -100,7 +116,11 @@ SPACE [\n|(\r\n)]
 void check_string()
 {
   char cur = 0, pre = 0;
+  int i = 1;
   while((cur = input())) {
+    *(yytext + i) = cur;
+    i++;
+
     if(pre == '\\') {
       switch(cur) {
         case('a'):  break;
@@ -121,10 +141,12 @@ void check_string()
     }
     else {
       if(cur == '\"') {
+        yytext[i] = 0;
         return;
       }
       if(cur == '\n') {
         yyerror("Unmatched double quotes!");
+        yytext[i] = 0;
         return;
       }
       pre = cur;

@@ -85,6 +85,7 @@ DECLARATION
 																insert(temp_table, $$);
 															}
 															else {
+																free($2);
 																yyerror("变量重定义！");
 																$$ = NULL;
 															}
@@ -211,7 +212,7 @@ INITIALIZATION_STATEMENT
 EXPRESSION
     : IDENTIFIER_EXPRESSION		{ $$ = $1; }
     | CONSTANT_EXPRESSION			{ $$ = $1; }
-    |ASSIGNMENT_EXPRESSION		{ $$ = $1; }
+    | ASSIGNMENT_EXPRESSION		{ $$ = $1; }
     | SELF_OPERATION					{ $$ = $1; }
     | BINARY_OPERATION				{ $$ = $1; }
     | UNARY_OPERATION					{ $$ = $1; }

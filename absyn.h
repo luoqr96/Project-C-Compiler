@@ -231,6 +231,11 @@ expression new_assign_expression(OP op, expression exp1, expression exp2)
           yyerror("右值类型必须为整型！");
         }
       }
+      else if(tp1 == TYPE_FLOAT || tp1 == TYPE_DOUBLE) {
+        if(tp2 == TYPE_ADDRESS) {
+          yyerror("右值类型必须为整型！");
+        }
+      }
       else {
 
       }
@@ -287,6 +292,7 @@ var_init new_var_init(variable var, expression exp)
   var_init vi = (var_init)malloc(sizeof(struct v_init));
   vi->var = var;
   vi->exp = exp;
+  printf("Check\n");
   if(exp) {
     if(exp->return_type == TYPE_VOID) {
       yyerror("右值类型不能为空！");
@@ -296,6 +302,11 @@ var_init new_var_init(variable var, expression exp)
       if(exp->return_type == TYPE_DOUBLE || exp->return_type == TYPE_FLOAT) {
         yyerror("右值类型必须为整型！");
         return NULL;
+      }
+    }
+    else if(var->return_type == TYPE_FLOAT || var->return_type == TYPE_DOUBLE) {
+      if(exp->return_type == TYPE_ADDRESS) {
+        yyerror("右值类型必须为整型！");
       }
     }
     else {

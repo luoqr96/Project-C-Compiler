@@ -42,17 +42,16 @@ void insert(var_table vt, variable var)
 entry lookup(var_table vt, char * id)
 {
   table tb;
-  var_table p = vt;
   int index = hash(id) % SIZE;
   entry en;
-  while(p) {
-    tb = p->tb;
+  while(vt) {
+    tb = vt->tb;
     for(en = tb[index]; en; en = en->next) {
       if(!strcmp(id, en->var->name)) {
         return en;
       }
     }
-    p = p->parent;
+    vt = vt->parent;
   }
   return NULL;
 }
