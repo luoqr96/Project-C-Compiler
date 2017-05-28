@@ -21,6 +21,7 @@ typedef enum {
 
 typedef struct en * entry;
 typedef entry * table;
+typedef struct f_list * func_list;
 typedef struct v_table * var_table;
 typedef struct dim * dimension;
 typedef struct cpd_stmt * compound_statement;
@@ -31,6 +32,10 @@ typedef struct exp * expression;
 typedef struct v_init * var_init;
 typedef struct stmt * statement;
 typedef struct pgm * program;
+struct f_list {
+  function f;
+  func_list next;
+};
 struct en {
   variable var;
   entry next;

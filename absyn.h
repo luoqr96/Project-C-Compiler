@@ -1,5 +1,6 @@
 #include "common.h"
 #include "var_table.h"
+#include "func_list.h"
 extern void yyerror(char *s);
 variable new_variable(char * name, v_type t, dimension d, unsigned int o)
 {
@@ -266,12 +267,7 @@ v_type get_unary_opr_type(OP op, expression exp)
       ret = TYPE_BOOL;
     }
   }
-  else if(op == GET_ADDR) {
-    //????
-  }
-  else if(op == GET_VAL) {
-    //????
-  }
+
   else if(op == SIGN_PLUS || op == SIGN_MINUS) {
     if(t == TYPE_CHAR || t == TYPE_BOOL || t == TYPE_INT || t == TYPE_FLOAT || t == TYPE_DOUBLE) {
       ret = t;
@@ -294,8 +290,62 @@ expression new_unary_expression(OP op, expression exp)
   expr->additional_type = exp->additional_type;
   expr->exp1 = exp;
   expr->exp2 = NULL;
-  expr->return_type = get_unary_opr_type(op, exp);
-  exp->is_const = (op == SIGN_PLUS || op == SIGN_MINUS);
+  if(op == GET_ADDR) {
+    expr->get_address_able = 0;
+    expr->is_const = 1;
+    expr->order = exp->order + 1;
+    if(exp->get_address_able) {
+      expr->return_type = TYPE_ADDRESS;
+      switch(exp->return_type) {
+        case TYPE_INT: expr->additional_type = TYPE_POINTER_INT; break;
+        case TYPE_BOOL: expr->additional_type = TYPE_POINTER_BOOL; break;
+        case TYPE_CHAR: expr->additional_type = TYPE_POINTER_CHAR; break;
+        case TYPE_FLOAT: expr->additional_type = TYPE_POINTER_FLOAT; break;
+        case TYPE_DOUBLE: expr->additional_type = TYPE_POINTER_DOUBLE; break;
+        default: expr->additional_type = exp->return_type; break;
+      }
+    }
+    else {
+      yyerror("表达式必须为左值或函数指示符！");
+      expr->return_type = TYPE_ERROR;
+    }
+  }
+  else if(op == GET_VAL) {
+    expr->get_address_able = 1;
+    expr->is_const = 0;
+    if(!exp->order) {
+      yyerror("\"*\"的操作数必须是指针！");
+      expr->return_type = TYPE_ERROR;
+    }
+    else if(exp->order == 1) {
+      expr->order = 0;
+      switch(exp->additional_type) {
+        case TYPE_ARRAY_INT: expr->return_type = TYPE_INT; break;
+        case TYPE_ARRAY_FLOAT: expr->return_type = TYPE_FLOAT; break;
+        case TYPE_ARRAY_CHAR: expr->return_type = TYPE_CHAR; break;
+        case TYPE_ARRAY_BOOL: expr->return_type = TYPE_BOOL; break;
+        case TYPE_ARRAY_DOUBLE: expr->return_type = TYPE_DOUBLE; break;
+        case TYPE_POINTER_INT: expr->return_type = TYPE_INT; break;
+        case TYPE_POINTER_FLOAT: expr->return_type = TYPE_FLOAT; break;
+        case TYPE_POINTER_CHAR: expr->return_type = TYPE_CHAR; break;
+        case TYPE_POINTER_BOOL: expr->return_type = TYPE_BOOL; break;
+        case TYPE_POINTER_DOUBLE: expr->return_type = TYPE_DOUBLE; break;
+        default: expr->return_type = TYPE_ERROR; break;
+      }
+    }
+    else {
+      expr->order = exp->order - 1;
+    }
+  }
+  else {
+    expr->return_type = get_unary_opr_type(op, exp);
+  }
+  if(op == SIGN_PLUS || op == SIGN_MINUS || op == LOGICAL_INV) {
+    exp->is_const = 1;
+  }
+  else {
+
+  }
   return expr;
 }
 expression new_self_expression(OP op, expression exp, e_type tp)

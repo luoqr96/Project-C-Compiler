@@ -9,6 +9,7 @@ var_table global_table;
 var_table temp_table;
 var_table parent_table;
 statement temp_stmt = NULL;
+func_list functions = NULL;
 %}
 %union {
 	int const_int;
@@ -23,9 +24,11 @@ statement temp_stmt = NULL;
 	parameter p;
 	OP op;
 	statement stmt;
+	function f;
 }
 %type <stmt> INITIALIZATION_STATEMENT
 %type <t> SIMPLE_TYPE POINTER_TYPE TYPE
+%type <f> FUNCTION
 %type <var> DECLARATION_ARRAY DECLARATION
 %type <p> PARAMETER
 %token <id> IDENTIFIER
@@ -69,12 +72,27 @@ PROGRAM
 		| PROGRAM INITIALIZATION_STATEMENT
     ;
 FUNCTION
-    : TYPE IDENTIFIER '(' PARAMETER ')' ';'
-    | TYPE IDENTIFIER '(' VOID ')' ';'
-    | TYPE IDENTIFIER '('  ')' ';'
-    | TYPE IDENTIFIER '(' PARAMETER ')' COMPOUND_STATEMENT    {  }
-    | TYPE IDENTIFIER '(' VOID ')' COMPOUND_STATEMENT    {  }
-    | TYPE IDENTIFIER '('  ')' COMPOUND_STATEMENT    {  }
+    /*: TYPE IDENTIFIER '(' PARAMETER ')' ';'		{ $$ = new_function($2, $4, NULL, $1.tp); }
+    | TYPE IDENTIFIER '(' VOID ')' ';'				{ $$ = new_function($2, NULL, NULL, $1.tp); }
+    | TYPE IDENTIFIER '('  ')' ';'						{ $$ = new_function($2, NULL, NULL, $1.tp); }*/
+    : TYPE IDENTIFIER '(' PARAMETER ')' COMPOUND_STATEMENT    {
+																																$$ = insert_func(functions, $2, $4, NULL, $1.tp);
+			 																													if(!$$) {
+																																	yyerror("函数重定义！");
+																																}
+																															}
+    | TYPE IDENTIFIER '(' VOID ')' COMPOUND_STATEMENT    			{
+																																$$ = insert_func(functions, $2, NULL, NULL, $1.tp);
+																																if(!$$) {
+																																	yyerror("函数重定义！");
+																																}
+																															}
+    | TYPE IDENTIFIER '('  ')' COMPOUND_STATEMENT    					{
+																																$$ = insert_func(functions, $2, NULL, NULL, $1.tp);
+																																if(!$$) {
+																																	yyerror("函数重定义！");
+																																}
+																															}
     ;
 
 DECLARATION
@@ -114,7 +132,7 @@ DECLARATION_ARRAY
 																														}
 																														else {
 																															free($2);
-																															yyerror("变量重定义！");
+																															yyerror("Redeclared variable！");
 																															$$ = NULL;
 																														}
 																													}
@@ -279,7 +297,7 @@ IDENTIFIER_EXPRESSION
 													}
 													else {
 														free($1);
-														yyerror("Uninitialized variable!");
+														yyerror("Undeclared variable!");
 													}
 											}
     ;
@@ -312,20 +330,20 @@ SELF_OPERATION
     | EXPRESSION OP_DECRE			{ $$ = new_self_expression(DECRE, $1, DECRE_RIGHT); }
     ;
 BINARY_OPERATION
-    : EXPRESSION '+' EXPRESSION		{ $$ = new_binary_expression(ADD, $1, $3); }
-    | EXPRESSION '-' EXPRESSION		{ $$ = new_binary_expression(SUB, $1, $3); }
-    | EXPRESSION '*' EXPRESSION		{ $$ = new_binary_expression(MUL, $1, $3); }
-    | EXPRESSION '/' EXPRESSION		{ $$ = new_binary_expression(DIV, $1, $3); }
-    | EXPRESSION '%' EXPRESSION		{ $$ = new_binary_expression(MOD, $1, $3); }
-    | EXPRESSION '^' EXPRESSION		{ $$ = new_binary_expression(XOR, $1, $3); }
-    | EXPRESSION '&' EXPRESSION		{ $$ = new_binary_expression(AND, $1, $3); }
-    | EXPRESSION '|' EXPRESSION		{ $$ = new_binary_expression(OR, $1, $3); }
-		| EXPRESSION ',' EXPRESSION		{ $$ = new_binary_expression(COMMA, $1, $3); }
-		| EXPRESSION '<' EXPRESSION		{ $$ = new_binary_expression(L, $1, $3); }
-		| EXPRESSION '>' EXPRESSION		{ $$ = new_binary_expression(G, $1, $3); }
+    : EXPRESSION '+' EXPRESSION			{ $$ = new_binary_expression(ADD, $1, $3); }
+    | EXPRESSION '-' EXPRESSION			{ $$ = new_binary_expression(SUB, $1, $3); }
+    | EXPRESSION '*' EXPRESSION			{ $$ = new_binary_expression(MUL, $1, $3); }
+    | EXPRESSION '/' EXPRESSION			{ $$ = new_binary_expression(DIV, $1, $3); }
+    | EXPRESSION '%' EXPRESSION			{ $$ = new_binary_expression(MOD, $1, $3); }
+    | EXPRESSION '^' EXPRESSION			{ $$ = new_binary_expression(XOR, $1, $3); }
+    | EXPRESSION '&' EXPRESSION			{ $$ = new_binary_expression(AND, $1, $3); }
+    | EXPRESSION '|' EXPRESSION			{ $$ = new_binary_expression(OR, $1, $3); }
+		| EXPRESSION ',' EXPRESSION			{ $$ = new_binary_expression(COMMA, $1, $3); }
+		| EXPRESSION '<' EXPRESSION			{ $$ = new_binary_expression(L, $1, $3); }
+		| EXPRESSION '>' EXPRESSION			{ $$ = new_binary_expression(G, $1, $3); }
     | EXPRESSION OP_LS EXPRESSION		{ $$ = new_binary_expression(LS, $1, $3); }
     | EXPRESSION OP_RS EXPRESSION		{ $$ = new_binary_expression(RS, $1, $3); }
-		| EXPRESSION OP_AND EXPRESSION		{ $$ = new_binary_expression(LOGICAL_AND, $1, $3); }
+		| EXPRESSION OP_AND EXPRESSION  { $$ = new_binary_expression(LOGICAL_AND, $1, $3); }
 		| EXPRESSION OP_OR EXPRESSION		{ $$ = new_binary_expression(LOGICAL_OR, $1, $3); }
 		| EXPRESSION OP_EQ EXPRESSION		{ $$ = new_binary_expression(EQ, $1, $3); }
 		| EXPRESSION OP_GE EXPRESSION		{ $$ = new_binary_expression(GE, $1, $3); }

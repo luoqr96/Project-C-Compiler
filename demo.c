@@ -2316,6 +2316,7 @@ int main(int argc, char *argv[])
 	global_table = gen_table();
 	temp_table = global_table;
 	parent_table = NULL;
+  functions = gen_func_list();
   /*yyin = fopen(argv[1], "r");*/
 	yyin = fopen("test.c", "r");
   yyparse();
