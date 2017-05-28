@@ -2229,7 +2229,10 @@ void check_character()
 {
   int n = 0;
   char cur = 0, pre = 0;
+  int  i = 1;
   while((cur = input())) {
+    *(yytext + i) = cur;
+    i++;
     n++;
     if(pre == '\\') {
       switch(cur) {
@@ -2255,10 +2258,12 @@ void check_character()
           if(n > 2) {
             yyerror("Exceed one character!");
           }
+          yytext[i] = 0;
           return;
       }
       if(cur == '\n') {
         yyerror("Unmatched single quote!");
+        yytext[i] = 0;
         return;
       }
       pre = cur;

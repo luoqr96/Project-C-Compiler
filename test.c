@@ -1,8 +1,11 @@
+
+int a;
 int main()
 {
 	double acd = 2;
-
-	acd = 22;
+	a = 1;
+	char b = 'd';
+	acd = "afdf";
 
 
 	acd = 5.0;
