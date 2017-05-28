@@ -3,7 +3,7 @@ int a;
 int main()
 {
 	double acd = 2;
-	a = 1;
+	int a = 1;
 	char b = 'd';
 	acd = "afdf";
 

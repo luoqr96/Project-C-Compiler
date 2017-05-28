@@ -93,9 +93,22 @@ DECLARATION
 		| DECLARATION_ARRAY			{ $$ = $1; }
     ;
 DECLARATION_ARRAY
-		: TYPE IDENTIFIER '[' ']'															{ $$ = new_variable($2, $1.tp, new_dimension(0), $1.order); }
-		| TYPE IDENTIFIER '[' CONSTANT_INTEGER ']'						{ $$ = new_variable($2, $1.tp, new_dimension($4), $1.order); }
-		| DECLARATION_ARRAY '[' ']'														{ update_dimension($1->dim, 0); $$ = $1; }
+		/*: TYPE IDENTIFIER '[' ']'															{
+																														$$ = new_variable($2, $1.tp, new_dimension(0), $1.order);
+																													}*/
+		: TYPE IDENTIFIER '[' CONSTANT_INTEGER ']'						{
+																														entry en = lookup_in_cur_environment(temp_table, $2);
+																														if(!en) {
+																															$$ = new_variable($2, $1.tp, new_dimension($4), $1.order);
+																															insert(temp_table, $$);
+																														}
+																														else {
+																															free($2);
+																															yyerror("变量重定义！");
+																															$$ = NULL;
+																														}
+																													}
+		/*| DECLARATION_ARRAY '[' ']'														{ update_dimension($1->dim, 0); $$ = $1; }*/
 		| DECLARATION_ARRAY '[' CONSTANT_INTEGER ']'					{ update_dimension($1->dim, $3); $$ = $1; }
 		;
 TYPE
