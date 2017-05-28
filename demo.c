@@ -544,7 +544,7 @@ void check_comment();
 void check_character();
 void count();
 int col = 0;
-int row = 0;
+int row = 1;
 #line 549 "demo.c"
 
 #define INITIAL 0

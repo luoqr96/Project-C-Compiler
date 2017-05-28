@@ -98,8 +98,18 @@ DECLARATION_ARRAY
 																													}*/
 		: TYPE IDENTIFIER '[' CONSTANT_INTEGER ']'						{
 																														entry en = lookup_in_cur_environment(temp_table, $2);
+																														v_type t;
 																														if(!en) {
-																															$$ = new_variable($2, $1.tp, new_dimension($4), $1.order);
+																															switch($1.tp) {
+																																case TYPE_INT: t = TYPE_ARRAY_INT; break;
+																																case TYPE_BOOL: t = TYPE_ARRAY_BOOL; break;
+																																case TYPE_CHAR: t = TYPE_ARRAY_CHAR; break;
+																																case TYPE_FLOAT: t = TYPE_ARRAY_FLOAT; break;
+																																case TYPE_DOUBLE: t = TYPE_ARRAY_DOUBLE; break;
+																																default: t = $1.tp; break;
+																															}
+																															$$ = new_variable($2, t, new_dimension($4), $1.order);
+																															$$->order = 1;
 																															insert(temp_table, $$);
 																														}
 																														else {
@@ -109,7 +119,7 @@ DECLARATION_ARRAY
 																														}
 																													}
 		/*| DECLARATION_ARRAY '[' ']'														{ update_dimension($1->dim, 0); $$ = $1; }*/
-		| DECLARATION_ARRAY '[' CONSTANT_INTEGER ']'					{ update_dimension($1->dim, $3); $$ = $1; }
+		| DECLARATION_ARRAY '[' CONSTANT_INTEGER ']'					{ update_dimension($1->dim, $3); $$ = $1; $$->order++; }
 		;
 TYPE
     : SIMPLE_TYPE				{ $$ = $1; }
@@ -126,12 +136,25 @@ SIMPLE_TYPE
     ;
 
 POINTER_TYPE
-    : SIMPLE_TYPE '*'				{ $$ = $1; $$.order = 1; }
+    : SIMPLE_TYPE '*'				{
+															v_type t;
+															switch($1.tp) {
+																case TYPE_INT: t = TYPE_POINTER_INT; break;
+																case TYPE_BOOL: t = TYPE_POINTER_BOOL; break;
+																case TYPE_CHAR: t = TYPE_POINTER_CHAR; break;
+																case TYPE_FLOAT: t = TYPE_POINTER_FLOAT; break;
+																case TYPE_DOUBLE: t = TYPE_POINTER_DOUBLE; break;
+																default: t = $1.tp; break;
+															}
+															$$ = $1;
+															$$.tp = t;
+															$$.order = 1;
+														}
     | POINTER_TYPE '*'			{ $$ = $1; $$.order++; }
     ;
 
 PARAMETER
-    : DECLARATION						{ $$ = new_parameter($1); }
+    : DECLARATION											{ $$ = new_parameter($1); }
     | PARAMETER ',' DECLARATION				{ $$ = update_parameter($1, $3); }
     ;
 
@@ -237,7 +260,7 @@ CALL_FUNCTION
 		: IDENTIFIER '(' EXPRESSION ')'
 		;
 ARRAY_OPERATION
-		: EXPRESSION '[' EXPRESSION ']'
+		: EXPRESSION '[' EXPRESSION ']'				{ $$ = new_array_expression($1, $3); }
 		;
 CONSTANT_EXPRESSION
     : CONSTANT_FLOAT				{ $$ = new_const_expression(CONST_FLOAT, TYPE_FLOAT); }
@@ -255,9 +278,9 @@ IDENTIFIER_EXPRESSION
 														$$ = new_var_expression(en->var);
 													}
 													else {
+														free($1);
 														yyerror("Uninitialized variable!");
 													}
-			/*check table first*/ /* $$ = new_simple_expression(VARIABLE, TYPE_ERROR); */
 											}
     ;
 ASSIGNMENT_EXPRESSION

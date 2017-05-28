@@ -581,18 +581,18 @@ static const yytype_int8 yyrhs[] =
 static const yytype_uint16 yyrline[] =
 {
        0,    63,    63,    66,    67,    68,    69,    72,    73,    74,
-      75,    76,    77,    81,    93,    99,   112,   115,   116,   120,
-     121,   122,   123,   124,   125,   129,   130,   134,   135,   139,
-     140,   143,   150,   153,   154,   155,   156,   157,   160,   161,
-     162,   163,   164,   165,   166,   169,   170,   171,   174,   175,
-     176,   179,   180,   183,   184,   188,   189,   193,   194,   195,
-     196,   197,   198,   199,   200,   204,   213,   226,   227,   228,
-     229,   230,   231,   232,   233,   240,   243,   244,   245,   246,
-     249,   264,   265,   266,   267,   268,   269,   270,   271,   272,
-     273,   274,   278,   279,   280,   281,   282,   283,   286,   287,
-     288,   289,   292,   293,   294,   295,   296,   297,   298,   299,
-     300,   301,   302,   303,   304,   305,   306,   307,   308,   309,
-     310
+      75,    76,    77,    81,    93,    99,   122,   125,   126,   130,
+     131,   132,   133,   134,   135,   139,   153,   157,   158,   162,
+     163,   166,   173,   176,   177,   178,   179,   180,   183,   184,
+     185,   186,   187,   188,   189,   192,   193,   194,   197,   198,
+     199,   202,   203,   206,   207,   211,   212,   216,   217,   218,
+     219,   220,   221,   222,   223,   227,   236,   249,   250,   251,
+     252,   253,   254,   255,   256,   263,   266,   267,   268,   269,
+     272,   287,   288,   289,   290,   291,   292,   293,   294,   295,
+     296,   297,   301,   302,   303,   304,   305,   306,   309,   310,
+     311,   312,   315,   316,   317,   318,   319,   320,   321,   322,
+     323,   324,   325,   326,   327,   328,   329,   330,   331,   332,
+     333
 };
 #endif
 
@@ -1879,8 +1879,18 @@ yyreduce:
 #line 99 "Parsing.y"
     {
 																														entry en = lookup_in_cur_environment(temp_table, (yyvsp[(2) - (5)].id));
+																														v_type t;
 																														if(!en) {
-																															(yyval.var) = new_variable((yyvsp[(2) - (5)].id), (yyvsp[(1) - (5)].t).tp, new_dimension((yyvsp[(4) - (5)].const_int)), (yyvsp[(1) - (5)].t).order);
+																															switch((yyvsp[(1) - (5)].t).tp) {
+																																case TYPE_INT: t = TYPE_ARRAY_INT; break;
+																																case TYPE_BOOL: t = TYPE_ARRAY_BOOL; break;
+																																case TYPE_CHAR: t = TYPE_ARRAY_CHAR; break;
+																																case TYPE_FLOAT: t = TYPE_ARRAY_FLOAT; break;
+																																case TYPE_DOUBLE: t = TYPE_ARRAY_DOUBLE; break;
+																																default: t = (yyvsp[(1) - (5)].t).tp; break;
+																															}
+																															(yyval.var) = new_variable((yyvsp[(2) - (5)].id), t, new_dimension((yyvsp[(4) - (5)].const_int)), (yyvsp[(1) - (5)].t).order);
+																															(yyval.var)->order = 1;
 																															insert(temp_table, (yyval.var));
 																														}
 																														else {
@@ -1892,72 +1902,85 @@ yyreduce:
     break;
 
   case 16:
-#line 112 "Parsing.y"
-    { update_dimension((yyvsp[(1) - (4)].var)->dim, (yyvsp[(3) - (4)].const_int)); (yyval.var) = (yyvsp[(1) - (4)].var); ;}
+#line 122 "Parsing.y"
+    { update_dimension((yyvsp[(1) - (4)].var)->dim, (yyvsp[(3) - (4)].const_int)); (yyval.var) = (yyvsp[(1) - (4)].var); (yyval.var)->order++; ;}
     break;
 
   case 17:
-#line 115 "Parsing.y"
+#line 125 "Parsing.y"
     { (yyval.t) = (yyvsp[(1) - (1)].t); ;}
     break;
 
   case 18:
-#line 116 "Parsing.y"
+#line 126 "Parsing.y"
     { (yyval.t) = (yyvsp[(1) - (1)].t); ;}
     break;
 
   case 19:
-#line 120 "Parsing.y"
+#line 130 "Parsing.y"
     { (yyval.t).tp = (yyvsp[(1) - (1)].tp); (yyval.t).order = 0; ;}
     break;
 
   case 20:
-#line 121 "Parsing.y"
+#line 131 "Parsing.y"
     { (yyval.t).tp = (yyvsp[(1) - (1)].tp); (yyval.t).order = 0; ;}
     break;
 
   case 21:
-#line 122 "Parsing.y"
+#line 132 "Parsing.y"
     { (yyval.t).tp = (yyvsp[(1) - (1)].tp); (yyval.t).order = 0; ;}
     break;
 
   case 22:
-#line 123 "Parsing.y"
+#line 133 "Parsing.y"
     { (yyval.t).tp = (yyvsp[(1) - (1)].tp); (yyval.t).order = 0; ;}
     break;
 
   case 23:
-#line 124 "Parsing.y"
+#line 134 "Parsing.y"
     { (yyval.t).tp = (yyvsp[(1) - (1)].tp); (yyval.t).order = 0; ;}
     break;
 
   case 24:
-#line 125 "Parsing.y"
+#line 135 "Parsing.y"
     { (yyval.t).tp = (yyvsp[(1) - (1)].tp); (yyval.t).order = 0; ;}
     break;
 
   case 25:
-#line 129 "Parsing.y"
-    { (yyval.t) = (yyvsp[(1) - (2)].t); (yyval.t).order = 1; ;}
+#line 139 "Parsing.y"
+    {
+															v_type t;
+															switch((yyvsp[(1) - (2)].t).tp) {
+																case TYPE_INT: t = TYPE_POINTER_INT; break;
+																case TYPE_BOOL: t = TYPE_POINTER_BOOL; break;
+																case TYPE_CHAR: t = TYPE_POINTER_CHAR; break;
+																case TYPE_FLOAT: t = TYPE_POINTER_FLOAT; break;
+																case TYPE_DOUBLE: t = TYPE_POINTER_DOUBLE; break;
+																default: t = (yyvsp[(1) - (2)].t).tp; break;
+															}
+															(yyval.t) = (yyvsp[(1) - (2)].t);
+															(yyval.t).tp = t;
+															(yyval.t).order = 1;
+														;}
     break;
 
   case 26:
-#line 130 "Parsing.y"
+#line 153 "Parsing.y"
     { (yyval.t) = (yyvsp[(1) - (2)].t); (yyval.t).order++; ;}
     break;
 
   case 27:
-#line 134 "Parsing.y"
+#line 157 "Parsing.y"
     { (yyval.p) = new_parameter((yyvsp[(1) - (1)].var)); ;}
     break;
 
   case 28:
-#line 135 "Parsing.y"
+#line 158 "Parsing.y"
     { (yyval.p) = update_parameter((yyvsp[(1) - (3)].p), (yyvsp[(3) - (3)].var)); ;}
     break;
 
   case 31:
-#line 143 "Parsing.y"
+#line 166 "Parsing.y"
     {
 								parent_table = temp_table; temp_table = gen_table();
 			 					add_child_table(parent_table, temp_table);
@@ -1966,47 +1989,47 @@ yyreduce:
     break;
 
   case 32:
-#line 150 "Parsing.y"
+#line 173 "Parsing.y"
     { temp_table = temp_table->parent; ;}
     break;
 
   case 38:
-#line 160 "Parsing.y"
+#line 183 "Parsing.y"
     { printf("1\n"); ;}
     break;
 
   case 39:
-#line 161 "Parsing.y"
+#line 184 "Parsing.y"
     { printf("2\n"); ;}
     break;
 
   case 40:
-#line 162 "Parsing.y"
+#line 185 "Parsing.y"
     { printf("3\n"); ;}
     break;
 
   case 41:
-#line 163 "Parsing.y"
+#line 186 "Parsing.y"
     { printf("4\n"); ;}
     break;
 
   case 42:
-#line 164 "Parsing.y"
+#line 187 "Parsing.y"
     { printf("5\n"); ;}
     break;
 
   case 43:
-#line 165 "Parsing.y"
+#line 188 "Parsing.y"
     { printf("6\n"); ;}
     break;
 
   case 44:
-#line 166 "Parsing.y"
+#line 189 "Parsing.y"
     { printf("7\n"); ;}
     break;
 
   case 65:
-#line 204 "Parsing.y"
+#line 227 "Parsing.y"
     {
 																					if(!(yyvsp[(1) - (2)].var)) {
 																						(yyval.stmt) = NULL;
@@ -2019,7 +2042,7 @@ yyreduce:
     break;
 
   case 66:
-#line 213 "Parsing.y"
+#line 236 "Parsing.y"
     {
 																					if(!(yyvsp[(1) - (4)].var)) {
 																						(yyval.stmt) = NULL;
@@ -2032,67 +2055,72 @@ yyreduce:
     break;
 
   case 67:
-#line 226 "Parsing.y"
+#line 249 "Parsing.y"
     { (yyval.exp) = (yyvsp[(1) - (1)].exp); ;}
     break;
 
   case 68:
-#line 227 "Parsing.y"
+#line 250 "Parsing.y"
     { (yyval.exp) = (yyvsp[(1) - (1)].exp); ;}
     break;
 
   case 69:
-#line 228 "Parsing.y"
+#line 251 "Parsing.y"
     { (yyval.exp) = (yyvsp[(1) - (1)].exp); ;}
     break;
 
   case 70:
-#line 229 "Parsing.y"
+#line 252 "Parsing.y"
     { (yyval.exp) = (yyvsp[(1) - (1)].exp); ;}
     break;
 
   case 71:
-#line 230 "Parsing.y"
+#line 253 "Parsing.y"
     { (yyval.exp) = (yyvsp[(1) - (1)].exp); ;}
     break;
 
   case 72:
-#line 231 "Parsing.y"
+#line 254 "Parsing.y"
     { (yyval.exp) = (yyvsp[(1) - (1)].exp); ;}
     break;
 
   case 73:
-#line 232 "Parsing.y"
+#line 255 "Parsing.y"
     { (yyval.exp) = (yyvsp[(1) - (1)].exp); ;}
     break;
 
   case 74:
-#line 233 "Parsing.y"
+#line 256 "Parsing.y"
     { (yyval.exp) = (yyvsp[(2) - (3)].exp); ;}
     break;
 
+  case 75:
+#line 263 "Parsing.y"
+    { (yyval.exp) = new_array_expression((yyvsp[(1) - (4)].exp), (yyvsp[(3) - (4)].exp)); ;}
+    break;
+
   case 76:
-#line 243 "Parsing.y"
+#line 266 "Parsing.y"
     { (yyval.exp) = new_const_expression(CONST_FLOAT, TYPE_FLOAT); ;}
     break;
 
   case 77:
-#line 244 "Parsing.y"
+#line 267 "Parsing.y"
     { (yyval.exp) = new_const_expression(CONST_INT, TYPE_INT); ;}
     break;
 
   case 78:
-#line 245 "Parsing.y"
+#line 268 "Parsing.y"
     { (yyval.exp) = new_const_expression(CONST_STR, TYPE_ADDRESS); ;}
     break;
 
   case 79:
-#line 246 "Parsing.y"
+#line 269 "Parsing.y"
     { (yyval.exp) = new_const_expression(CONST_CHAR, TYPE_CHAR); ;}
     break;
 
   case 80:
-#line 249 "Parsing.y"
+#line 272 "Parsing.y"
     {
 													entry en = lookup(temp_table, (yyvsp[(1) - (1)].id));
 													//printf("VAR:%s\n", $1);
@@ -2102,215 +2130,215 @@ yyreduce:
 														(yyval.exp) = new_var_expression(en->var);
 													}
 													else {
+														free((yyvsp[(1) - (1)].id));
 														yyerror("Uninitialized variable!");
 													}
-			/*check table first*/ /* $$ = new_simple_expression(VARIABLE, TYPE_ERROR); */
 											;}
     break;
 
   case 81:
-#line 264 "Parsing.y"
+#line 287 "Parsing.y"
     { (yyval.exp) = new_assign_expression(ASSIGN, (yyvsp[(1) - (3)].exp), (yyvsp[(3) - (3)].exp)); ;}
     break;
 
   case 82:
-#line 265 "Parsing.y"
+#line 288 "Parsing.y"
     { (yyval.exp) = new_assign_expression(OR_ASSIGN, (yyvsp[(1) - (3)].exp), (yyvsp[(3) - (3)].exp)); ;}
     break;
 
   case 83:
-#line 266 "Parsing.y"
+#line 289 "Parsing.y"
     { (yyval.exp) = new_assign_expression(AND_ASSIGN, (yyvsp[(1) - (3)].exp), (yyvsp[(3) - (3)].exp)); ;}
     break;
 
   case 84:
-#line 267 "Parsing.y"
+#line 290 "Parsing.y"
     { (yyval.exp) = new_assign_expression(XOR_ASSIGN, (yyvsp[(1) - (3)].exp), (yyvsp[(3) - (3)].exp)); ;}
     break;
 
   case 85:
-#line 268 "Parsing.y"
+#line 291 "Parsing.y"
     { (yyval.exp) = new_assign_expression(ADD_ASSIGN, (yyvsp[(1) - (3)].exp), (yyvsp[(3) - (3)].exp)); ;}
     break;
 
   case 86:
-#line 269 "Parsing.y"
+#line 292 "Parsing.y"
     { (yyval.exp) = new_assign_expression(SUB_ASSIGN, (yyvsp[(1) - (3)].exp), (yyvsp[(3) - (3)].exp)); ;}
     break;
 
   case 87:
-#line 270 "Parsing.y"
+#line 293 "Parsing.y"
     { (yyval.exp) = new_assign_expression(MUL_ASSIGN, (yyvsp[(1) - (3)].exp), (yyvsp[(3) - (3)].exp)); ;}
     break;
 
   case 88:
-#line 271 "Parsing.y"
+#line 294 "Parsing.y"
     { (yyval.exp) = new_assign_expression(LS_ASSIGN, (yyvsp[(1) - (3)].exp), (yyvsp[(3) - (3)].exp)); ;}
     break;
 
   case 89:
-#line 272 "Parsing.y"
+#line 295 "Parsing.y"
     { (yyval.exp) = new_assign_expression(RS_ASSIGN, (yyvsp[(1) - (3)].exp), (yyvsp[(3) - (3)].exp)); ;}
     break;
 
   case 90:
-#line 273 "Parsing.y"
+#line 296 "Parsing.y"
     { (yyval.exp) = new_assign_expression(MOD_ASSIGN, (yyvsp[(1) - (3)].exp), (yyvsp[(3) - (3)].exp)); ;}
     break;
 
   case 91:
-#line 274 "Parsing.y"
+#line 297 "Parsing.y"
     { (yyval.exp) = new_assign_expression(DIV_ASSIGN, (yyvsp[(1) - (3)].exp), (yyvsp[(3) - (3)].exp)); ;}
     break;
 
   case 92:
-#line 278 "Parsing.y"
+#line 301 "Parsing.y"
     { (yyval.exp) = new_unary_expression(BITWISE_NEG, (yyvsp[(2) - (2)].exp)); ;}
     break;
 
   case 93:
-#line 279 "Parsing.y"
+#line 302 "Parsing.y"
     { (yyval.exp) = new_unary_expression(LOGICAL_INV, (yyvsp[(2) - (2)].exp)); ;}
     break;
 
   case 94:
-#line 280 "Parsing.y"
+#line 303 "Parsing.y"
     { (yyval.exp) = new_unary_expression(GET_ADDR, (yyvsp[(2) - (2)].exp)); ;}
     break;
 
   case 95:
-#line 281 "Parsing.y"
+#line 304 "Parsing.y"
     { (yyval.exp) = new_unary_expression(GET_VAL, (yyvsp[(2) - (2)].exp)); ;}
     break;
 
   case 96:
-#line 282 "Parsing.y"
+#line 305 "Parsing.y"
     { (yyval.exp) = new_unary_expression(SIGN_MINUS, (yyvsp[(2) - (2)].exp)); ;}
     break;
 
   case 97:
-#line 283 "Parsing.y"
+#line 306 "Parsing.y"
     { (yyval.exp) = new_unary_expression(SIGN_PLUS, (yyvsp[(2) - (2)].exp)); ;}
     break;
 
   case 98:
-#line 286 "Parsing.y"
+#line 309 "Parsing.y"
     { (yyval.exp) = new_self_expression(INCRE, (yyvsp[(2) - (2)].exp), INCRE_LEFT); ;}
     break;
 
   case 99:
-#line 287 "Parsing.y"
+#line 310 "Parsing.y"
     { (yyval.exp) = new_self_expression(DECRE, (yyvsp[(2) - (2)].exp), DECRE_LEFT); ;}
     break;
 
   case 100:
-#line 288 "Parsing.y"
+#line 311 "Parsing.y"
     { (yyval.exp) = new_self_expression(INCRE, (yyvsp[(1) - (2)].exp), INCRE_RIGHT); ;}
     break;
 
   case 101:
-#line 289 "Parsing.y"
+#line 312 "Parsing.y"
     { (yyval.exp) = new_self_expression(DECRE, (yyvsp[(1) - (2)].exp), DECRE_RIGHT); ;}
     break;
 
   case 102:
-#line 292 "Parsing.y"
+#line 315 "Parsing.y"
     { (yyval.exp) = new_binary_expression(ADD, (yyvsp[(1) - (3)].exp), (yyvsp[(3) - (3)].exp)); ;}
     break;
 
   case 103:
-#line 293 "Parsing.y"
+#line 316 "Parsing.y"
     { (yyval.exp) = new_binary_expression(SUB, (yyvsp[(1) - (3)].exp), (yyvsp[(3) - (3)].exp)); ;}
     break;
 
   case 104:
-#line 294 "Parsing.y"
+#line 317 "Parsing.y"
     { (yyval.exp) = new_binary_expression(MUL, (yyvsp[(1) - (3)].exp), (yyvsp[(3) - (3)].exp)); ;}
     break;
 
   case 105:
-#line 295 "Parsing.y"
+#line 318 "Parsing.y"
     { (yyval.exp) = new_binary_expression(DIV, (yyvsp[(1) - (3)].exp), (yyvsp[(3) - (3)].exp)); ;}
     break;
 
   case 106:
-#line 296 "Parsing.y"
+#line 319 "Parsing.y"
     { (yyval.exp) = new_binary_expression(MOD, (yyvsp[(1) - (3)].exp), (yyvsp[(3) - (3)].exp)); ;}
     break;
 
   case 107:
-#line 297 "Parsing.y"
+#line 320 "Parsing.y"
     { (yyval.exp) = new_binary_expression(XOR, (yyvsp[(1) - (3)].exp), (yyvsp[(3) - (3)].exp)); ;}
     break;
 
   case 108:
-#line 298 "Parsing.y"
+#line 321 "Parsing.y"
     { (yyval.exp) = new_binary_expression(AND, (yyvsp[(1) - (3)].exp), (yyvsp[(3) - (3)].exp)); ;}
     break;
 
   case 109:
-#line 299 "Parsing.y"
+#line 322 "Parsing.y"
     { (yyval.exp) = new_binary_expression(OR, (yyvsp[(1) - (3)].exp), (yyvsp[(3) - (3)].exp)); ;}
     break;
 
   case 110:
-#line 300 "Parsing.y"
+#line 323 "Parsing.y"
     { (yyval.exp) = new_binary_expression(COMMA, (yyvsp[(1) - (3)].exp), (yyvsp[(3) - (3)].exp)); ;}
     break;
 
   case 111:
-#line 301 "Parsing.y"
+#line 324 "Parsing.y"
     { (yyval.exp) = new_binary_expression(L, (yyvsp[(1) - (3)].exp), (yyvsp[(3) - (3)].exp)); ;}
     break;
 
   case 112:
-#line 302 "Parsing.y"
+#line 325 "Parsing.y"
     { (yyval.exp) = new_binary_expression(G, (yyvsp[(1) - (3)].exp), (yyvsp[(3) - (3)].exp)); ;}
     break;
 
   case 113:
-#line 303 "Parsing.y"
+#line 326 "Parsing.y"
     { (yyval.exp) = new_binary_expression(LS, (yyvsp[(1) - (3)].exp), (yyvsp[(3) - (3)].exp)); ;}
     break;
 
   case 114:
-#line 304 "Parsing.y"
+#line 327 "Parsing.y"
     { (yyval.exp) = new_binary_expression(RS, (yyvsp[(1) - (3)].exp), (yyvsp[(3) - (3)].exp)); ;}
     break;
 
   case 115:
-#line 305 "Parsing.y"
+#line 328 "Parsing.y"
     { (yyval.exp) = new_binary_expression(LOGICAL_AND, (yyvsp[(1) - (3)].exp), (yyvsp[(3) - (3)].exp)); ;}
     break;
 
   case 116:
-#line 306 "Parsing.y"
+#line 329 "Parsing.y"
     { (yyval.exp) = new_binary_expression(LOGICAL_OR, (yyvsp[(1) - (3)].exp), (yyvsp[(3) - (3)].exp)); ;}
     break;
 
   case 117:
-#line 307 "Parsing.y"
+#line 330 "Parsing.y"
     { (yyval.exp) = new_binary_expression(EQ, (yyvsp[(1) - (3)].exp), (yyvsp[(3) - (3)].exp)); ;}
     break;
 
   case 118:
-#line 308 "Parsing.y"
+#line 331 "Parsing.y"
     { (yyval.exp) = new_binary_expression(GE, (yyvsp[(1) - (3)].exp), (yyvsp[(3) - (3)].exp)); ;}
     break;
 
   case 119:
-#line 309 "Parsing.y"
+#line 332 "Parsing.y"
     { (yyval.exp) = new_binary_expression(LE, (yyvsp[(1) - (3)].exp), (yyvsp[(3) - (3)].exp)); ;}
     break;
 
   case 120:
-#line 310 "Parsing.y"
+#line 333 "Parsing.y"
     { (yyval.exp) = new_binary_expression(NE, (yyvsp[(1) - (3)].exp), (yyvsp[(3) - (3)].exp)); ;}
     break;
 
 
 /* Line 1267 of yacc.c.  */
-#line 2314 "parsing.h"
+#line 2342 "parsing.h"
       default: break;
     }
   YY_SYMBOL_PRINT ("-> $$ =", yyr1[yyn], &yyval, &yyloc);
@@ -2524,7 +2552,7 @@ yyreturn:
 }
 
 
-#line 313 "Parsing.y"
+#line 336 "Parsing.y"
 
 void yyerror(char *s)
 {

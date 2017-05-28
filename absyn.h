@@ -8,7 +8,10 @@ variable new_variable(char * name, v_type t, dimension d, unsigned int o)
   var->var_type = t;
   //printf("%d\n", t);
   //printf("%d\n", TYPE_DOUBLE);
-  if(t == TYPE_ARRAY || t == TYPE_POINTER) {
+  if(t == TYPE_ARRAY_INT || t == TYPE_ARRAY_BOOL || t == TYPE_ARRAY_CHAR
+     || t == TYPE_ARRAY_FLOAT || t == TYPE_ARRAY_DOUBLE
+     || t == TYPE_POINTER_INT || t == TYPE_POINTER_BOOL || t == TYPE_POINTER_CHAR
+     || t == TYPE_POINTER_FLOAT || t == TYPE_POINTER_DOUBLE) {
     var->return_type = TYPE_ADDRESS;
   }
   else {
@@ -62,10 +65,11 @@ expression new_const_expression(e_type tp1, v_type tp2)
   expression expr;
   expr = (expression)malloc(sizeof(struct exp));
   expr->exp_type = tp1;
+  expr->additional_type = tp2;
   expr->return_type = tp2;
   expr->exp1 = NULL;
   expr->exp2 = NULL;
-  expr->dim = NULL;
+  expr->order = 0;
   expr->get_address_able = 0;
   expr->is_const = 1;
   return expr;
@@ -76,18 +80,57 @@ expression new_var_expression(variable var)
   expr = (expression)malloc(sizeof(struct exp));
   expr->exp_type = VARIABLE;
   expr->var = var;
+  expr->additional_type = var->var_type;
   expr->return_type = var->return_type;
   expr->exp1 = NULL;
   expr->exp2 = NULL;
-  expr->dim = var->dim;
+  expr->order = var->order;
   expr->get_address_able = 1;
-  expr->is_const = 0;
+  v_type t = var->var_type;
+  expr->is_const
+  = ((var->var_type == TYPE_ARRAY_INT)
+  || (var->var_type == TYPE_ARRAY_BOOL)
+  || (var->var_type == TYPE_ARRAY_CHAR)
+  || (var->var_type == TYPE_ARRAY_FLOAT)
+  || (var->var_type == TYPE_ARRAY_DOUBLE));
   return expr;
 }
 v_type get_binary_opr_type(OP op, expression exp1, expression exp2)
 {
   v_type tp_exp1, tp_exp2, ret;
-  if(op == ADD || op == SUB
+  if(op == GE || op == G || op == LE || op == L
+    || op == EQ || op == NE || op == LOGICAL_OR
+    || op == LOGICAL_AND) {
+    if(exp1->return_type == TYPE_VOID || exp2->return_type == TYPE_VOID) {
+      yyerror("Illegal type!");
+      return TYPE_ERROR;
+    }
+    ret = TYPE_BOOL;
+  }
+  else if(exp1->return_type == TYPE_ADDRESS) {
+    if(exp2->return_type == TYPE_BOOL || exp2->return_type == TYPE_INT || exp2->return_type == TYPE_CHAR) {
+      if(op == ADD || op == SUB) {
+        ret = TYPE_ADDRESS;
+      }
+      else {
+        ret = TYPE_ERROR;
+        yyerror("表达式必须具有算数类型！");
+      }
+    }
+
+  }
+  else if(exp2->return_type == TYPE_ADDRESS) {
+    if(exp1->return_type == TYPE_BOOL || exp1->return_type == TYPE_INT || exp1->return_type == TYPE_CHAR) {
+      if(op == SUB) {
+        ret = TYPE_ADDRESS;
+      }
+      else {
+        ret = TYPE_ERROR;
+        yyerror("表达式必须具有算数类型！");
+      }
+    }
+  }
+  else if(op == ADD || op == SUB
     || op == MUL || op == DIV) {
       switch (exp1->return_type) {
         case TYPE_BOOL: tp_exp1 = TYPE_BOOL; break;
@@ -95,7 +138,6 @@ v_type get_binary_opr_type(OP op, expression exp1, expression exp2)
         case TYPE_INT: tp_exp1 = TYPE_INT; break;
         case TYPE_FLOAT: tp_exp1 = TYPE_FLOAT; break;
         case TYPE_DOUBLE: tp_exp1 = TYPE_DOUBLE; break;
-        case TYPE_ADDRESS: tp_exp1 = TYPE_ADDRESS; break;
         default: yyerror("Illegal type!"); return TYPE_ERROR;
       }
       switch (exp2->return_type) {
@@ -104,7 +146,6 @@ v_type get_binary_opr_type(OP op, expression exp1, expression exp2)
         case TYPE_INT: tp_exp2 = TYPE_INT; break;
         case TYPE_FLOAT: tp_exp2 = TYPE_FLOAT; break;
         case TYPE_DOUBLE: tp_exp2 = TYPE_DOUBLE; break;
-        case TYPE_ADDRESS: tp_exp2 = TYPE_ADDRESS; break;
         default: yyerror("Illegal type!"); return TYPE_ERROR;
       }
       ret = tp_exp1 > tp_exp2 ? tp_exp1 : tp_exp2;
@@ -115,27 +156,15 @@ v_type get_binary_opr_type(OP op, expression exp1, expression exp2)
         case TYPE_BOOL: tp_exp1 = TYPE_BOOL; break;
         case TYPE_CHAR: tp_exp1 = TYPE_CHAR; break;
         case TYPE_INT: tp_exp1 = TYPE_INT; break;
-        default: yyerror("Illegal type!"); return TYPE_ERROR;
+        default: yyerror("左值类型必须为整型！"); return TYPE_ERROR;
       }
       switch (exp2->return_type) {
         case TYPE_BOOL: tp_exp2 = TYPE_BOOL; break;
         case TYPE_CHAR: tp_exp2 = TYPE_CHAR; break;
         case TYPE_INT: tp_exp2 = TYPE_INT; break;
-        default: yyerror("Illegal type!"); return TYPE_ERROR;
+        default: yyerror("右值类型必须为整型！"); return TYPE_ERROR;
       }
       ret = tp_exp1 > tp_exp2 ? tp_exp1 : tp_exp2;
-  }
-  else if(op == GE || op == G || op == LE || op == L
-    || op == EQ || op == NE || op == LOGICAL_OR
-    || op == LOGICAL_AND) {
-    if(exp1->return_type == TYPE_VOID || exp2->return_type == TYPE_VOID) {
-      yyerror("Illegal type!");
-      return TYPE_ERROR;
-    }
-    ret = TYPE_BOOL;
-  }
-  else if (op == COMMA) {
-    ret = exp1->return_type;
   }
   else {
     return TYPE_ERROR;
@@ -150,8 +179,79 @@ expression new_binary_expression(OP op, expression exp1, expression exp2)
   expr->exp_type = BINARY;
   expr->exp1 = exp1;
   expr->exp2 = exp2;
-  expr->return_type = get_binary_opr_type(op, exp1, exp2);
-  expr->is_const = 1;
+  if(op == COMMA) {
+    expr->return_type = exp1->return_type;
+    expr->is_const = exp1->is_const;
+    expr->get_address_able = exp1->get_address_able;
+    expr->order = exp1->order;
+    expr->additional_type = exp1->additional_type;
+  }
+  else {
+    expr->return_type = get_binary_opr_type(op, exp1, exp2);
+    expr->is_const = 1;
+    expr->get_address_able = 0;
+    if(exp1->return_type == TYPE_ADDRESS) {
+      expr->order = exp1->order;
+      expr->additional_type = exp1->additional_type;
+    }
+    else if(exp2->return_type == TYPE_ADDRESS) {
+      expr->order = exp1->order;
+      expr->additional_type = exp2->additional_type;
+    }
+    else {
+      expr->order = 0;
+    }
+  }
+
+  return expr;
+}
+expression new_array_expression(expression exp1, expression exp2)
+{
+  expression expr;
+  v_type t = exp1->additional_type;
+  expr = (expression)malloc(sizeof(struct exp));
+  expr->exp_type = MEM;
+  expr->op = GET_MEM;
+  expr->exp1 = exp1;
+  expr->exp2 = exp2;
+  if(!exp1->order) {
+    expr->return_type = TYPE_ERROR;
+    yyerror("表达式必须包含指向对象的指针类型！");
+  }
+  else {
+    expr->order = exp1->order - 1;
+    if(expr->order == 0) {
+      expr->is_const = 0;
+      switch (t) {
+        case TYPE_ARRAY_INT: expr->return_type = TYPE_INT; break;
+        case TYPE_ARRAY_FLOAT: expr->return_type = TYPE_FLOAT; break;
+        case TYPE_ARRAY_CHAR: expr->return_type = TYPE_CHAR; break;
+        case TYPE_ARRAY_BOOL: expr->return_type = TYPE_BOOL; break;
+        case TYPE_ARRAY_DOUBLE: expr->return_type = TYPE_DOUBLE; break;
+        default: expr->return_type = TYPE_ERROR; break;
+      }
+    }
+    else {
+      expr->is_const = 1;
+      expr->return_type = TYPE_ADDRESS;
+      expr->additional_type = exp1->additional_type;
+      switch (t) {
+        case TYPE_ARRAY_INT: expr->is_const = 1; break;
+        case TYPE_ARRAY_FLOAT: expr->is_const = 1; break;
+        case TYPE_ARRAY_CHAR: expr->is_const = 1; break;
+        case TYPE_ARRAY_BOOL: expr->is_const = 1; break;
+        case TYPE_ARRAY_DOUBLE: expr->is_const = 1; break;
+        case TYPE_POINTER_INT: expr->is_const = 0; break;
+        case TYPE_POINTER_FLOAT: expr->is_const = 0; break;
+        case TYPE_POINTER_CHAR: expr->is_const = 0; break;
+        case TYPE_POINTER_BOOL: expr->is_const = 0; break;
+        case TYPE_POINTER_DOUBLE: expr->is_const = 0; break;
+        default: expr->return_type = TYPE_ERROR; break;
+      }
+    }
+  }
+  expr->get_address_able = 1;
+
   return expr;
 }
 v_type get_unary_opr_type(OP op, expression exp)
@@ -191,6 +291,7 @@ expression new_unary_expression(OP op, expression exp)
   expr = (expression)malloc(sizeof(struct exp));
   expr->op = op;
   expr->exp_type = UNARY;
+  expr->additional_type = exp->additional_type;
   expr->exp1 = exp;
   expr->exp2 = NULL;
   expr->return_type = get_unary_opr_type(op, exp);
@@ -203,12 +304,16 @@ expression new_self_expression(OP op, expression exp, e_type tp)
   expr = (expression)malloc(sizeof(struct exp));
   expr->op = op;
   expr->exp_type = tp;
+  expr->additional_type = exp->additional_type;
   if(exp->is_const) {
     yyerror("不可修改的值!");
   }
   expr->return_type = exp->return_type;
   expr->exp1 = exp;
-  exp->is_const = 1;
+  expr->exp2 = NULL;
+  expr->is_const = 1;
+  expr->get_address_able = 0;
+  expr->order = exp->order;
   return expr;
 }
 
@@ -218,6 +323,7 @@ expression new_assign_expression(OP op, expression exp1, expression exp2)
   v_type tp1 = exp1->return_type;
   v_type tp2 = exp2->return_type;
   expr = (expression)malloc(sizeof(struct exp));
+  expr->additional_type = exp1->additional_type;
   expr->op = op;
   expr->exp_type = ASSIGNMENT;
   if(exp1->is_const) {
@@ -286,8 +392,9 @@ expression new_assign_expression(OP op, expression exp1, expression exp2)
   expr->return_type = exp1->return_type;
   expr->exp1 = exp1;
   expr->exp2 = exp2;
-  expr->is_const = 1;
-
+  expr->is_const = exp1->is_const;
+  expr->get_address_able = exp1->get_address_able;
+  expr->order = exp1->order;
   return expr;
 }
 var_init new_var_init(variable var, expression exp)

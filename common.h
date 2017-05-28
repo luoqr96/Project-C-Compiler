@@ -3,17 +3,19 @@
 #define _COMMON_H
 typedef enum {
   TYPE_BOOL, TYPE_CHAR, TYPE_INT, TYPE_FLOAT,  TYPE_DOUBLE, TYPE_STRING,
-  TYPE_ARRAY, TYPE_POINTER, TYPE_VOID, TYPE_ADDRESS, TYPE_ERROR
+  TYPE_POINTER_BOOL, TYPE_POINTER_CHAR, TYPE_POINTER_INT, TYPE_POINTER_FLOAT, TYPE_POINTER_DOUBLE,
+  TYPE_ARRAY_BOOL, TYPE_ARRAY_CHAR, TYPE_ARRAY_INT, TYPE_ARRAY_FLOAT, TYPE_ARRAY_DOUBLE,
+  TYPE_VOID, TYPE_ADDRESS, TYPE_ERROR
 } v_type;
 typedef enum {
   ADD, SUB, MUL, DIV, MOD, AND, OR, XOR, LS, RS, GE, G, LE, L, EQ, NE,
-  LOGICAL_AND, LOGICAL_OR, LOGICAL_INV, COMMA, GET_ADDR, GET_VAL, GET_ARRAY,
+  LOGICAL_AND, LOGICAL_OR, LOGICAL_INV, COMMA, GET_ADDR, GET_VAL, GET_MEM,
   SIGN_MINUS, SIGN_PLUS, BITWISE_NEG, INCRE, DECRE, ASSIGN, OR_ASSIGN, AND_ASSIGN,
   ADD_ASSIGN, SUB_ASSIGN, XOR_ASSIGN, DIV_ASSIGN, MUL_ASSIGN, MOD_ASSIGN, LS_ASSIGN, RS_ASSIGN
 } OP;
 typedef enum {
   VARIABLE, CONST_CHAR, CONST_STR, CONST_INT, CONST_FLOAT, UNARY, BINARY, INCRE_LEFT,
-  DECRE_RIGHT, INCRE_RIGHT, DECRE_LEFT, ASSIGNMENT, ARRAY, FUNC
+  DECRE_RIGHT, INCRE_RIGHT, DECRE_LEFT, ASSIGNMENT, MEM, FUNC
 } e_type;
 
 
@@ -53,18 +55,21 @@ struct var {
 struct param {
   variable var;
   parameter next;
-};struct exp {
+};
+struct exp {
   OP op;
   e_type exp_type;
+  v_type additional_type;
   v_type return_type;
   variable var;
   _Bool get_address_able;
   _Bool is_const;
-  dimension dim;
-  char const_char;
-  char * const_str;
-  int const_int;
-  float const_float;
+  // char const_char;
+  // char * const_str;
+  // float const_float;
+  // int const_int;
+  int order;
+
   expression exp1;
   expression exp2;
 };
