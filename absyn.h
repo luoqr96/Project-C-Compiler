@@ -47,12 +47,17 @@ parameter new_parameter(variable var)
   parameter p = (parameter)malloc(sizeof(struct param));
   p->var = var;
   p->next = NULL;
+  p->n = 1;
   return p;
 }
 parameter update_parameter(parameter h, variable var)
 {
+  if(!h || !var) {
+    return h;
+  }
   parameter p = h;
   while(1) {
+    p->n++;
     if(!p->next) {
       p->next = new_parameter(var);
       break;
@@ -77,6 +82,9 @@ expression new_const_expression(e_type tp1, v_type tp2)
 }
 expression new_var_expression(variable var)
 {
+  if(!var) {
+    return NULL;
+  }
   expression expr;
   expr = (expression)malloc(sizeof(struct exp));
   expr->exp_type = VARIABLE;
@@ -87,7 +95,6 @@ expression new_var_expression(variable var)
   expr->exp2 = NULL;
   expr->order = var->order;
   expr->get_address_able = 1;
-  v_type t = var->var_type;
   expr->is_const
   = ((var->var_type == TYPE_ARRAY_INT)
   || (var->var_type == TYPE_ARRAY_BOOL)
@@ -118,7 +125,10 @@ v_type get_binary_opr_type(OP op, expression exp1, expression exp2)
         yyerror("表达式必须具有算数类型！");
       }
     }
-
+    else {
+        ret = TYPE_ERROR;
+        yyerror("表达式必须具有算数类型！");
+    }
   }
   else if(exp2->return_type == TYPE_ADDRESS) {
     if(exp1->return_type == TYPE_BOOL || exp1->return_type == TYPE_INT || exp1->return_type == TYPE_CHAR) {
@@ -129,6 +139,10 @@ v_type get_binary_opr_type(OP op, expression exp1, expression exp2)
         ret = TYPE_ERROR;
         yyerror("表达式必须具有算数类型！");
       }
+    }
+    else {
+        ret = TYPE_ERROR;
+        yyerror("表达式必须具有算数类型！");
     }
   }
   else if(op == ADD || op == SUB
@@ -174,6 +188,9 @@ v_type get_binary_opr_type(OP op, expression exp1, expression exp2)
 }
 expression new_binary_expression(OP op, expression exp1, expression exp2)
 {
+  if(!exp1 || !exp2) {
+    return NULL;
+  }
   expression expr;
   expr = (expression)malloc(sizeof(struct exp));
   expr->op = op;
@@ -208,6 +225,9 @@ expression new_binary_expression(OP op, expression exp1, expression exp2)
 }
 expression new_array_expression(expression exp1, expression exp2)
 {
+  if(!exp1 || !exp2) {
+    return NULL;
+  }
   expression expr;
   v_type t = exp1->additional_type;
   expr = (expression)malloc(sizeof(struct exp));
@@ -283,6 +303,9 @@ v_type get_unary_opr_type(OP op, expression exp)
 }
 expression new_unary_expression(OP op, expression exp)
 {
+  if(!exp) {
+    return NULL;
+  }
   expression expr;
   expr = (expression)malloc(sizeof(struct exp));
   expr->op = op;
@@ -350,6 +373,9 @@ expression new_unary_expression(OP op, expression exp)
 }
 expression new_self_expression(OP op, expression exp, e_type tp)
 {
+  if(!exp) {
+    return NULL;
+  }
   expression expr;
   expr = (expression)malloc(sizeof(struct exp));
   expr->op = op;
@@ -369,6 +395,9 @@ expression new_self_expression(OP op, expression exp, e_type tp)
 
 expression new_assign_expression(OP op, expression exp1, expression exp2)
 {
+  if(!exp1 || !exp2) {
+    return NULL;
+  }
   expression expr;
   v_type tp1 = exp1->return_type;
   v_type tp2 = exp2->return_type;
@@ -447,6 +476,25 @@ expression new_assign_expression(OP op, expression exp1, expression exp2)
   expr->order = exp1->order;
   return expr;
 }
+expression new_function_expression(function f)
+{
+  expression expr;
+  if(!f) {
+    return NULL;
+  }
+  expr = (expression)malloc(sizeof(struct exp));
+  expr->f = f;
+  expr->return_type = f->return_type;
+  expr->exp_type = CALL;
+  expr->additional_type = f->return_type;
+  expr->exp1 = NULL;
+  expr->exp2 = NULL;
+  expr->is_const = 1;
+  expr->get_address_able = 0;
+  expr->order = 0;
+  return expr;
+}
+
 var_init new_var_init(variable var, expression exp)
 {
   var_init vi = (var_init)malloc(sizeof(struct v_init));

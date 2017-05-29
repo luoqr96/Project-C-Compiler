@@ -9,7 +9,7 @@ var_table global_table;
 var_table temp_table;
 var_table parent_table;
 statement temp_stmt = NULL;
-func_list functions = NULL;
+func_list func_table = NULL;
 %}
 %union {
 	int const_int;
@@ -18,6 +18,7 @@ func_list functions = NULL;
   char *const_str;
 	char *id;
 	struct { v_type tp; int order; } t;
+	struct { v_type tp; char *name; } fun_dec;
 	expression exp;
 	v_type tp;
 	variable var;
@@ -26,6 +27,7 @@ func_list functions = NULL;
 	statement stmt;
 	function f;
 }
+%type <fun_dec> FUNC_DEC
 %type <stmt> INITIALIZATION_STATEMENT
 %type <t> SIMPLE_TYPE POINTER_TYPE TYPE
 %type <f> FUNCTION
@@ -75,25 +77,37 @@ FUNCTION
     /*: TYPE IDENTIFIER '(' PARAMETER ')' ';'		{ $$ = new_function($2, $4, NULL, $1.tp); }
     | TYPE IDENTIFIER '(' VOID ')' ';'				{ $$ = new_function($2, NULL, NULL, $1.tp); }
     | TYPE IDENTIFIER '('  ')' ';'						{ $$ = new_function($2, NULL, NULL, $1.tp); }*/
-    : TYPE IDENTIFIER '(' PARAMETER ')' COMPOUND_STATEMENT    {
-																																$$ = insert_func(functions, $2, $4, NULL, $1.tp);
+    : FUNC_DEC PARAMETER ')' '{' STATEMENT_LIST '}'						{
+																																$$ = insert_func(func_table, $1.name, $2, NULL, $1.tp);
 			 																													if(!$$) {
 																																	yyerror("函数重定义！");
 																																}
 																															}
-    | TYPE IDENTIFIER '(' VOID ')' COMPOUND_STATEMENT    			{
-																																$$ = insert_func(functions, $2, NULL, NULL, $1.tp);
+    | FUNC_DEC VOID ')' '{' STATEMENT_LIST '}'    						{
+																																$$ = insert_func(func_table, $1.name, NULL, NULL, $1.tp);
 																																if(!$$) {
 																																	yyerror("函数重定义！");
 																																}
 																															}
-    | TYPE IDENTIFIER '('  ')' COMPOUND_STATEMENT    					{
-																																$$ = insert_func(functions, $2, NULL, NULL, $1.tp);
+    | FUNC_DEC ')' '{' STATEMENT_LIST '}'   									{
+																																$$ = insert_func(func_table, $1.name, NULL, NULL, $1.tp);
 																																if(!$$) {
 																																	yyerror("函数重定义！");
 																																}
 																															}
     ;
+
+FUNC_DEC
+		: TYPE IDENTIFIER '('   {
+															$$.tp = $1.tp;
+			 												$$.name = $2;
+															parent_table = temp_table; temp_table = gen_table();
+										 					add_child_table(parent_table, temp_table);
+															temp_stmt = NULL;
+														}
+		;
+
+
 
 DECLARATION
     : TYPE IDENTIFIER				{
@@ -272,10 +286,29 @@ EXPRESSION
     | UNARY_OPERATION					{ $$ = $1; }
 		| ARRAY_OPERATION					{ $$ = $1; }
 		| '(' EXPRESSION ')'			{ $$ = $2; }
-		/*| CALL_FUNCTION		{ $$ = $1; }*/
+		| CALL_FUNCTION						{ $$ = $1; }
     ;
 CALL_FUNCTION
-		: IDENTIFIER '(' EXPRESSION ')'
+		: IDENTIFIER '(' EXPRESSION ')'				{
+																						function f = check_function(func_table, $1, $3);
+																						if(f) {
+																							$$ = new_function_expression(f);
+																						}
+																						else {
+																							$$ = NULL;
+																						}
+																						free($1);
+																					}
+		| IDENTIFIER '(' ')'                  {
+																						function f = check_function(func_table, $1, NULL);
+																						if(f) {
+																							$$ = new_function_expression(f);
+																						}
+																						else {
+																							$$ = NULL;
+																						}
+																						free($1);
+																					}
 		;
 ARRAY_OPERATION
 		: EXPRESSION '[' EXPRESSION ']'				{ $$ = new_array_expression($1, $3); }

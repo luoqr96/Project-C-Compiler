@@ -15,7 +15,7 @@ typedef enum {
 } OP;
 typedef enum {
   VARIABLE, CONST_CHAR, CONST_STR, CONST_INT, CONST_FLOAT, UNARY, BINARY, INCRE_LEFT,
-  DECRE_RIGHT, INCRE_RIGHT, DECRE_LEFT, ASSIGNMENT, MEM, FUNC
+  DECRE_RIGHT, INCRE_RIGHT, DECRE_LEFT, ASSIGNMENT, MEM, CALL
 } e_type;
 
 
@@ -58,6 +58,7 @@ struct var {
   unsigned int order;         //for pointer
 };
 struct param {
+  int n;
   variable var;
   parameter next;
 };
@@ -67,6 +68,7 @@ struct exp {
   v_type additional_type;
   v_type return_type;
   variable var;
+  function f;
   _Bool get_address_able;
   _Bool is_const;
   // char const_char;
