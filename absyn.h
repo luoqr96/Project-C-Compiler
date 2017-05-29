@@ -358,6 +358,7 @@ expression new_unary_expression(OP op, expression exp)
     }
     else {
       expr->order = exp->order - 1;
+      expr->return_type = TYPE_ADDRESS;
     }
   }
   else {
@@ -415,8 +416,8 @@ expression new_assign_expression(OP op, expression exp1, expression exp2)
         yyerror("右值类型不能为空！");
       }
       else if(tp1 == TYPE_ADDRESS) {
-        if(tp2 == TYPE_DOUBLE || tp2 == TYPE_FLOAT) {
-          yyerror("右值类型必须为整型！");
+        if(tp2 != TYPE_ADDRESS) {
+          yyerror("右值类型必须为指针类型！");
         }
       }
       else if(tp1 == TYPE_FLOAT || tp1 == TYPE_DOUBLE) {

@@ -107,7 +107,6 @@ function check_function(func_list list, char * name, expression expr)
             }
 
           }
-
           exp = exp->exp1;
         }
       }
